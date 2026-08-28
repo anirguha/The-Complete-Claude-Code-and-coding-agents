@@ -1,0 +1,5 @@
+{
+  "python.terminal.useEnvFile": true,
+  "python.REPL.enableREPLSmartSend": true,
+  "python.REPL.sendToNativeREPL": true
+}
