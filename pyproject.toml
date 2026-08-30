@@ -8,12 +8,15 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "gradio>=6.26.0",
     "numpy>=2.4.6",
     "ollama>=0.6.2",
     "openai>=3.5.0",
+    "openai-agents>=0.22.0",
     "pandas>=3.0.5",
     "pexpect>=4.9.0",
     "pip>=26.2.1",
+    "pypdf>=6.16.2",
     "python-dotenv>=1.2.3",
     "requests>=2.34.2",
     "rich>=15.0.0",

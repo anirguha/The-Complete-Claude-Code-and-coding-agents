@@ -218,3 +218,4 @@ memory.db
 6_mcp/frontend/node_modules/
 6_mcp/frontend/*.tsbuildinfo
 .envrc
+Exercises/email.txt
