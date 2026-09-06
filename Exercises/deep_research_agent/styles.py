@@ -13,357 +13,554 @@ HEADER_HTML = """
     </div>
     <div class="dr-titles">
         <h1>Deep<span class="dr-sep">/</span>Research</h1>
-        <p>Multi-search web investigation</p>
+        <p>Explore a question. Connect the evidence. Get a clearer picture.</p>
     </div>
 </div>
 """
 
 CSS = """
-.gradio-container {
-    --dr-bg: #f8fafc;
-    --dr-surface: #ffffff;
-    --dr-line: #172033;
-    --dr-line-soft: #dce3ed;
-    --dr-text: #172033;
-    --dr-muted: #64748b;
-    --dr-amber: #2563eb;
-    --dr-blue: #2563eb;
-    --dr-purple: #1d4ed8;
+/* ==========================================================================
+   Deep/Research — Gradio theme (v2, editorial)
+   --------------------------------------------------------------------------
+   Direction
+     A research tool should feel like a well-set document, not a dashboard.
+     UI chrome is quiet and sans-serif; the report — the actual product — is
+     set in a serif with a measured line length and generous leading.
+     One accent colour, used for actions and links only. No decorative
+     shadows, gradients, or hover lifts.
 
-    max-width: 1080px !important;
-    margin: 0 auto !important;
-    padding: 3.5rem 2rem 4rem !important;
-    background: var(--dr-bg) !important;
-    color: var(--dr-text) !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+   Sections
+     1. Design tokens (light + dark)
+     2. Page shell
+     3. Header
+     4. Query row
+     5. Examples
+     6. Report
+     7. Accessibility & responsive
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
+
+.gradio-container {
+    /* Surfaces */
+    --dr-bg:       #fafbfb;
+    --dr-surface:  #ffffff;
+    --dr-tint:     #f1f4f6;
+
+    /* Lines */
+    --dr-line:        #d9dfe5;
+    --dr-line-strong: #b9c3cc;
+
+    /* Text */
+    --dr-text:   #1b2530;
+    --dr-muted:  #5c6873;
+
+    /* Accent — a single deep blue, reserved for actions and links */
+    --dr-accent:        #24577a;
+    --dr-accent-strong: #193f59;
+    --dr-accent-fg:     #ffffff;
+    --dr-accent-ring:   color-mix(in srgb, var(--dr-accent) 22%, transparent);
+
+    /* Shape */
+    --dr-radius-sm: 4px;
+    --dr-radius-md: 6px;
+    --dr-ease:      0.12s ease;
+
+    /* Type */
+    --dr-font-ui:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --dr-font-serif: "Charter", "Iowan Old Style", "Source Serif Pro", "Georgia", "Times New Roman", serif;
+    --dr-font-mono:  ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    /* Report measure (characters per line) */
+    --dr-measure: 70ch;
 }
 
 .gradio-container.dark,
 .dark .gradio-container,
 body.dark .gradio-container,
 html.dark .gradio-container {
-    --dr-bg: #0f172a;
-    --dr-surface: #182338;
-    --dr-line: #94a3b8;
-    --dr-line-soft: #334155;
-    --dr-text: #e2e8f0;
-    --dr-muted: #a5b4c8;
-    --dr-blue: #93c5fd;
-    --dr-purple: #bfdbfe;
+    --dr-bg:       #121a21;
+    --dr-surface:  #18222b;
+    --dr-tint:     #1f2b35;
+
+    --dr-line:        #2d3a46;
+    --dr-line-strong: #45545f;
+
+    --dr-text:   #e4e9ee;
+    --dr-muted:  #9aa7b3;
+
+    --dr-accent:        #7fb3d9;
+    --dr-accent-strong: #a9cde8;
+    --dr-accent-fg:     #0e1a24;
 }
 
-body { background: #f8fafc; }
-body:has(.gradio-container.dark), body:has(.dark .gradio-container),
-body.dark, html.dark body { background: #0f172a; }
 
-/* === HEADER === */
+/* --------------------------------------------------------------------------
+   2. Page shell
+   -------------------------------------------------------------------------- */
+
+body { background: #fafbfb; }
+
+body.dark,
+html.dark body,
+body:has(.gradio-container.dark),
+body:has(.dark .gradio-container) {
+    background: #121a21;
+}
+
+.gradio-container {
+    max-width: 960px !important;
+    margin: 0 auto !important;
+    padding: 4rem 2.5rem 6rem !important;
+    background: var(--dr-bg) !important;
+    color: var(--dr-text) !important;
+    font-family: var(--dr-font-ui) !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+.gradio-container footer { display: none !important; }
+
+
+/* --------------------------------------------------------------------------
+   3. Header
+   -------------------------------------------------------------------------- */
+
 .dr-brand {
     display: grid;
     grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 1rem;
+    align-items: start;
+    gap: 1.25rem;
+    margin-bottom: 2.75rem;
     padding-bottom: 1.75rem;
-    border-bottom: 1px solid var(--dr-line-soft);
-    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--dr-line);
 }
 
+/* Mark: three ink rules, reads as a document — no tint box, no accent */
 .dr-mark {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 5px;
-    width: 38px;
+    box-sizing: border-box;
+    width: 40px;
+    height: 40px;
+    margin-top: 0.35rem;
+    padding: 8px 6px;
+    border: 1px solid var(--dr-line-strong);
+    border-radius: var(--dr-radius-sm);
 }
 
-.dr-bar { height: 6px; display: block; border-radius: 4px; }
-.dr-bar-1 { background: var(--dr-amber);  width: 100%; }
-.dr-bar-2 { background: var(--dr-blue);   width: 70%;  }
-.dr-bar-3 { background: var(--dr-purple); width: 45%;  }
+.dr-bar {
+    display: block;
+    height: 3px;
+    background: var(--dr-text);
+}
+
+.dr-bar-1 { width: 100%; }
+.dr-bar-2 { width: 80%; }
+.dr-bar-3 { width: 55%; }
+
+/* Eyebrow removed from the hierarchy: the title and subtitle carry it */
+.dr-eyebrow { display: none; }
 
 .dr-titles h1 {
-    font-size: clamp(1.8rem, 4vw, 2.6rem);
-    font-weight: 700;
-    letter-spacing: -0.045em;
     margin: 0;
-    line-height: 1.15;
     color: var(--dr-text);
+    font-family: var(--dr-font-serif);
+    font-size: clamp(1.9rem, 3.6vw, 2.5rem);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
 }
 
 .dr-sep {
-    color: var(--dr-amber);
+    margin: 0 0.06em;
+    color: var(--dr-muted);
     font-weight: 300;
-    margin: 0 0.04em;
 }
 
 .dr-titles p {
-    font-family: inherit;
-    font-size: 0.95rem;
-    letter-spacing: 0.01em;
-    margin: 0.55rem 0 0;
+    max-width: 48ch;
+    margin: 0.5rem 0 0;
     color: var(--dr-muted);
+    font-size: 1rem;
+    line-height: 1.55;
 }
 
-/* === QUERY ROW === */
+
+/* --------------------------------------------------------------------------
+   4. Query row
+   -------------------------------------------------------------------------- */
+
 .dr-query-row {
-    gap: 0.75rem !important;
+    gap: 0.5rem !important;
     align-items: stretch !important;
-}
-
-#dr-query, #dr-query > div, #dr-query .wrap, #dr-query .form, #dr-query .block {
+    padding: 0 !important;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
-    border-radius: 10px !important;
 }
 
-#dr-query textarea, #dr-query input {
+/* Strip Gradio's wrapper chrome */
+#dr-query,
+#dr-query > div,
+#dr-query .wrap,
+#dr-query .form,
+#dr-query .block {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#dr-query textarea,
+#dr-query input {
+    min-height: 52px !important;
+    padding: 0.85rem 1rem !important;
     background: var(--dr-surface) !important;
     color: var(--dr-text) !important;
-    border: 1px solid var(--dr-line-soft) !important;
-    border-radius: 10px !important;
-    padding: 1.05rem 1.2rem !important;
-    font-size: 1.05rem !important;
-    font-family: inherit !important;
+    border: 1px solid var(--dr-line-strong) !important;
+    border-radius: var(--dr-radius-md) !important;
     box-shadow: none !important;
-    line-height: 1.45 !important;
+    font-family: inherit !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
     resize: none !important;
-    min-height: 56px !important;
-    transition: border-color 0.15s, box-shadow 0.15s !important;
+    transition: border-color var(--dr-ease), box-shadow var(--dr-ease) !important;
 }
 
-#dr-query textarea:focus, #dr-query input:focus {
+#dr-query textarea:hover,
+#dr-query input:hover {
+    border-color: var(--dr-muted) !important;
+}
+
+#dr-query textarea:focus,
+#dr-query input:focus {
     outline: none !important;
-    border-color: var(--dr-blue) !important;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--dr-blue) 20%, transparent) !important;
+    border-color: var(--dr-accent) !important;
+    box-shadow: 0 0 0 3px var(--dr-accent-ring) !important;
 }
 
-#dr-query textarea::placeholder, #dr-query input::placeholder {
+#dr-query textarea::placeholder,
+#dr-query input::placeholder {
     color: var(--dr-muted) !important;
     opacity: 1 !important;
 }
 
+/* Primary action */
 #dr-run {
-    background: #2563eb !important;
-    color: #ffffff !important;
-    border: 1px solid var(--dr-line-soft) !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.01em !important;
-    font-size: 0.95rem !important;
+    min-width: 132px !important;
+    min-height: 52px !important;
+    padding: 0 1.25rem !important;
+    background: var(--dr-accent) !important;
+    color: var(--dr-accent-fg) !important;
+    border: 1px solid var(--dr-accent) !important;
+    border-radius: var(--dr-radius-md) !important;
     box-shadow: none !important;
-    transition: background 0.15s, color 0.15s, transform 0.08s !important;
-    min-width: 150px !important;
-    padding: 1rem 1.5rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+    transition: background var(--dr-ease), border-color var(--dr-ease) !important;
 }
 
 #dr-run:hover:not(:disabled) {
-    background: #1d4ed8 !important;
-    color: #ffffff !important;
-}
-
-#dr-run:focus-visible, #dr-examples button:focus-visible,
-#dr-examples td:focus-visible, #dr-report a:focus-visible {
-    outline: 3px solid var(--dr-blue) !important;
-    outline-offset: 3px !important;
+    background: var(--dr-accent-strong) !important;
+    border-color: var(--dr-accent-strong) !important;
 }
 
 #dr-run:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
 }
 
-#dr-run:active { transform: translateY(1px) !important; }
 
-/* === EXAMPLES === */
+/* --------------------------------------------------------------------------
+   5. Examples
+   -------------------------------------------------------------------------- */
+
 .dr-examples-label {
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    margin: 1.5rem 0 0.6rem;
     color: var(--dr-muted);
-    margin: 2rem 0 0.85rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
-.dr-examples-label::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--dr-line-soft);
-}
+.dr-examples-label::after { content: none; }
 
-#dr-examples, #dr-examples > div, #dr-examples .wrap, #dr-examples .block {
+/* Strip Gradio's wrapper chrome */
+#dr-examples,
+#dr-examples > div,
+#dr-examples .wrap,
+#dr-examples .block {
+    padding: 0 !important;
     background: transparent !important;
     border: none !important;
-    padding: 0 !important;
     box-shadow: none !important;
 }
 
-#dr-examples label, #dr-examples .label-wrap, #dr-examples > div > .label-wrap {
+#dr-examples label,
+#dr-examples .label-wrap,
+#dr-examples thead {
     display: none !important;
 }
 
 #dr-examples table {
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
     width: auto !important;
     background: transparent !important;
     border: none !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
 }
 
-#dr-examples thead { display: none !important; }
-
-#dr-examples tbody { background: transparent !important; }
-
+/* Rows/cells become a wrapping list of quiet, text-first suggestions */
+#dr-examples tbody,
 #dr-examples tr {
-    background: transparent !important;
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 8px !important;
+    gap: 0.4rem 0.5rem !important;
+    background: transparent !important;
     border: none !important;
 }
 
-#dr-examples td, #dr-examples button {
-    background: var(--dr-surface) !important;
-    border: 1px solid var(--dr-line-soft) !important;
-    padding: 0.7rem 1.05rem !important;
-    cursor: pointer !important;
-    transition: border-color 0.15s, color 0.15s, transform 0.1s !important;
-    font-size: 0.9rem !important;
-    color: var(--dr-text) !important;
-    border-radius: 10px !important;
+#dr-examples td,
+#dr-examples button {
     margin: 0 !important;
-    text-align: left !important;
+    padding: 0.45rem 0.8rem !important;
+    background: transparent !important;
+    color: var(--dr-text) !important;
+    border: 1px solid var(--dr-line) !important;
+    border-radius: var(--dr-radius-md) !important;
     box-shadow: none !important;
+    font-size: 0.875rem !important;
+    line-height: 1.45 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    cursor: pointer !important;
+    transition: background var(--dr-ease), border-color var(--dr-ease) !important;
 }
 
-#dr-examples td:hover, #dr-examples button:hover {
-    border-color: var(--dr-purple) !important;
-    color: var(--dr-purple) !important;
-    transform: translateY(-1px);
+#dr-examples td:hover,
+#dr-examples button:hover {
+    background: var(--dr-tint) !important;
+    border-color: var(--dr-line-strong) !important;
 }
 
-/* === REPORT === */
+
+/* --------------------------------------------------------------------------
+   6. Report — the product; set as a document
+   -------------------------------------------------------------------------- */
+
 #dr-report {
-    margin-top: 2.5rem !important;
+    min-height: 40px;
+    margin-top: 3rem !important;
     padding: 0 !important;
     background: transparent !important;
+    color: var(--dr-text) !important;
     border: none !important;
     box-shadow: none !important;
-    color: var(--dr-text) !important;
-    min-height: 40px;
+    overflow-wrap: anywhere;
 }
 
-#dr-report > div, #dr-report .prose {
+#dr-report > div,
+#dr-report .prose {
     background: transparent !important;
     color: var(--dr-text) !important;
 }
 
-#dr-report:not(:empty) {
-    border-top: 1px solid var(--dr-line-soft) !important;
-    padding-top: 1.75rem !important;
+/* Draw the page only once the Markdown wrapper has content */
+#dr-report:has(.prose > :not(:empty)) {
+    padding: 2.5rem 3rem 3rem !important;
+    background: var(--dr-surface) !important;
+    border: 1px solid var(--dr-line) !important;
+    border-top: 3px solid var(--dr-text) !important;
+    border-radius: var(--dr-radius-sm) !important;
+    box-shadow: none !important;
+}
+
+#dr-report .prose {
+    max-width: var(--dr-measure);
+    font-family: var(--dr-font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+}
+
+#dr-report .prose > :first-child { margin-top: 0; }
+#dr-report .prose > :last-child  { margin-bottom: 0; }
+
+/* Headings: same serif, differentiated by size and space, not colour */
+#dr-report h1,
+#dr-report h2,
+#dr-report h3 {
+    color: var(--dr-text);
+    font-family: var(--dr-font-serif);
+    font-weight: 600;
+    line-height: 1.25;
 }
 
 #dr-report h1 {
-    font-size: 1.85rem;
-    font-weight: 700;
-    color: var(--dr-blue);
-    border-bottom: 1px solid var(--dr-line-soft);
-    padding-bottom: 0.45rem;
-    margin: 1.5rem 0 1rem;
-    letter-spacing: -0.025em;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--dr-line);
+    font-size: 1.9rem;
+    letter-spacing: -0.01em;
 }
 
 #dr-report h2 {
-    font-size: 1.35rem;
-    color: var(--dr-text);
-    font-weight: 600;
-    margin-top: 1.75rem;
-    letter-spacing: -0.015em;
+    margin: 2.25rem 0 0.75rem;
+    font-size: 1.4rem;
 }
 
 #dr-report h3 {
-    font-size: 1.1rem;
-    color: var(--dr-text);
-    font-weight: 600;
-    margin-top: 1.5rem;
+    margin: 1.75rem 0 0.5rem;
+    font-size: 1.125rem;
 }
 
-#dr-report p { line-height: 1.8; }
-#dr-report { overflow-wrap: anywhere; }
-#dr-report pre { overflow-x: auto; }
-#dr-report pre code { border: none; padding: 0; background: transparent; }
-#dr-report table { display: block; max-width: 100%; overflow-x: auto; }
-#dr-report blockquote { border-left: 3px solid var(--dr-blue); border-radius: 6px; }
-#dr-examples tbody { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+/* Body text */
+#dr-report p { margin: 0 0 1rem; }
+
+#dr-report ul,
+#dr-report ol {
+    margin: 0 0 1rem;
+    padding-left: 1.4rem;
+}
+
+#dr-report li { margin: 0.35rem 0; }
 
 #dr-report a {
-    color: var(--dr-blue);
+    color: var(--dr-accent);
     text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, var(--dr-accent) 45%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
 }
 
-#dr-report a:hover { color: var(--dr-amber); }
+#dr-report a:hover {
+    color: var(--dr-accent-strong);
+    text-decoration-color: currentColor;
+}
 
+#dr-report hr {
+    height: 1px;
+    margin: 2rem 0;
+    background: var(--dr-line);
+    border: none;
+}
+
+/* Code: sans-serif UI chrome inside the serif document */
 #dr-report code {
-    background: var(--dr-surface);
-    border: 1px solid var(--dr-line-soft);
-    padding: 0.1rem 0.4rem;
-    font-size: 0.92em;
-    border-radius: 6px;
+    padding: 0.1em 0.35em;
+    background: var(--dr-tint);
+    border-radius: var(--dr-radius-sm);
+    font-family: var(--dr-font-mono);
+    font-size: 0.86em;
 }
 
 #dr-report pre {
-    background: var(--dr-surface);
-    border: 1px solid var(--dr-line-soft);
-    border-radius: 6px;
+    margin: 1.25rem 0;
     padding: 1rem 1.25rem;
+    background: var(--dr-tint);
+    border: 1px solid var(--dr-line);
+    border-radius: var(--dr-radius-sm);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    overflow-x: auto;
 }
 
+#dr-report pre code {
+    padding: 0;
+    background: transparent;
+    font-size: inherit;
+}
+
+/* Quotes: a single rule, no fill */
 #dr-report blockquote {
-    background: var(--dr-surface);
-    padding: 1rem 1.25rem;
-    margin: 1rem 0;
-    color: var(--dr-text);
+    margin: 1.25rem 0;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    color: var(--dr-muted);
+    border-left: 2px solid var(--dr-line-strong);
+    font-style: italic;
 }
 
-#dr-report ul, #dr-report ol { padding-left: 1.5rem; }
-#dr-report li { margin: 0.3rem 0; line-height: 1.6; }
-
+/* Tables: horizontal rules only */
 #dr-report table {
+    display: block;
+    max-width: 100%;
+    margin: 1.25rem 0;
     border-collapse: collapse;
-    border: 1px solid var(--dr-line-soft);
+    font-family: var(--dr-font-ui);
+    font-size: 0.9rem;
+    line-height: 1.45;
+    overflow-x: auto;
 }
 
-#dr-report th, #dr-report td {
-    border: 1px solid var(--dr-line-soft);
-    padding: 0.5rem 0.85rem;
+#dr-report th,
+#dr-report td {
+    padding: 0.6rem 0.85rem;
+    border: none;
+    border-bottom: 1px solid var(--dr-line);
     text-align: left;
+    vertical-align: top;
 }
 
 #dr-report th {
-    background: var(--dr-surface);
+    color: var(--dr-text);
+    border-bottom: 2px solid var(--dr-text);
     font-weight: 600;
-    color: var(--dr-blue);
 }
 
- .gradio-container footer { display: none !important; }
+#dr-report td:first-child,
+#dr-report th:first-child { padding-left: 0; }
+
+#dr-report td:last-child,
+#dr-report th:last-child { padding-right: 0; }
+
+
+/* --------------------------------------------------------------------------
+   7. Accessibility & responsive
+   -------------------------------------------------------------------------- */
+
+#dr-run:focus-visible,
+#dr-examples button:focus-visible,
+#dr-examples td:focus-visible,
+#dr-report a:focus-visible {
+    outline: 2px solid var(--dr-accent) !important;
+    outline-offset: 2px !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
-    .gradio-container *, .gradio-container *::before, .gradio-container *::after {
+    .gradio-container *,
+    .gradio-container *::before,
+    .gradio-container *::after {
         transition: none !important;
     }
 }
 
 @media (max-width: 700px) {
-    .gradio-container { padding: 1.5rem 1rem 3rem !important; }
-    .dr-query-row { flex-direction: column !important; }
-    #dr-run {
-        width: 100% !important;
+    .gradio-container { padding: 2rem 1.25rem 4rem !important; }
+
+    .dr-brand {
+        gap: 0.9rem;
+        margin-bottom: 2rem;
     }
+
+    .dr-query-row { flex-direction: column !important; }
+
+    #dr-query,
+    #dr-run {
+        flex-basis: auto !important;
+        min-width: 0 !important;
+    }
+
+    #dr-run { width: 100% !important; }
+
+    #dr-report:has(.prose > :not(:empty)) { padding: 1.5rem 1.25rem 2rem !important; }
+
+    #dr-report .prose { font-size: 1rem; }
 }
 """
 

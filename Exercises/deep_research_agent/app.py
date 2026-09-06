@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from research_manager import ResearchManager
 from styles import CSS, EXAMPLES, HEADER_HTML, JS
 
-load_dotenv(override=True)
+# Preserve deployment secrets when a local .env file is present.
+load_dotenv(override=False)
 
 
 async def run(query: str):
@@ -35,4 +36,9 @@ with gr.Blocks(title="Deep Research") as ui:
 
 
 if __name__ == "__main__":
-    ui.launch(css=CSS, js=JS, theme=gr.themes.Base())
+    ui.launch(
+        css=CSS,
+        js=JS,
+        theme=gr.themes.Base(),
+        ssr_mode=False,
+    )
