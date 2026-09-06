@@ -1,7 +1,7 @@
 import gradio as gr
 from dotenv import load_dotenv
 from research_manager import ResearchManager
-from styles import CSS, JS, EXAMPLES, HEADER_HTML
+from styles import CSS, EXAMPLES, HEADER_HTML, JS
 
 load_dotenv(override=True)
 
