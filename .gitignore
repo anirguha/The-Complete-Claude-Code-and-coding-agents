@@ -219,3 +219,12 @@ memory.db
 6_mcp/frontend/*.tsbuildinfo
 .envrc
 Exercises/email.txt
+report.md
+Exercises/crewai/coursework/debate/output/decide.md
+Exercises/crewai/coursework/debate/output/oppose.md
+Exercises/crewai/coursework/debate/output/propose.md
+Exercises/crewai/coursework/stock_picker/output/decision.md
+Exercises/crewai/coursework/financial_researcher/AGENTS.md
+Exercises/crewai/coursework/stock_picker/AGENTS.md
+Exercises/crewai/coursework/stock_picker/output/research_report.json
+Exercises/crewai/coursework/stock_picker/output/trending_companies.json
