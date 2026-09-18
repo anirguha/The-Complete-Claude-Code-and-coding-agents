@@ -10,6 +10,8 @@ requires-python = ">=3.11"
 dependencies = [
     "gradio>=6.26.0",
     "graphviz>=0.21",
+    "langchain-openai>=1.6.2",
+    "langgraph>=1.2.11",
     "numpy>=2.4.6",
     "ollama>=0.6.2",
     "openai>=3.5.0",
@@ -29,7 +31,7 @@ dependencies = [
 the-complete-agent-and-mcp-course = "the_complete_agent_and_mcp_course:main"
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 exclude = ["agents/*lab*.ipynb"]
 [tool.ruff.lint]
