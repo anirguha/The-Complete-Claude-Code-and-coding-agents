@@ -11,6 +11,9 @@ dependencies = [
     "gradio>=6.26.0",
     "graphviz>=0.21",
     "ipykernel>=7.3.0",
+    "langchain>=1.4.2",
+    "langchain-community>=0.4.2",
+    "langchain-mcp-adapters>=0.3.2",
     "langchain-openai>=1.6.2",
     "langgraph>=1.2.11",
     "numpy>=2.4.6",
@@ -27,6 +30,7 @@ dependencies = [
     "requests>=2.34.2",
     "rich>=15.0.0",
     "ruff>=0.16.4",
+    "wikipedia>=1.4.0",
 ]
 
 [project.scripts]
