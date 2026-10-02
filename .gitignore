@@ -235,3 +235,4 @@ Exercises/agent_frameworks/01_google_adk_a2a/taskworker/workspace/notes.txt
 Exercises/agent_frameworks/01_google_adk_a2a/board.sqlite-wal
 Exercises/agent_frameworks/01_google_adk_a2a/board.sqlite-shm
 Exercises/agent_frameworks/01_google_adk_a2a/board.sqlite
+node_modules

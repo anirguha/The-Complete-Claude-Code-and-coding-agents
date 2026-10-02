@@ -1,0 +1,30 @@
+{
+  "name": "mastra_agents",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "step1": "tsx step1.ts",
+    "step2": "tsx step2.ts",
+    "step3": "tsx step3.ts",
+    "step4": "tsx step4.ts",
+    "step5": "tsx step5.ts",
+    "worker": "tsx worker.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.71",
+    "@mastra/core": "^1.42.0",
+    "@mastra/mcp": "^1.10.0",
+    "dotenv": "^18.0.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
