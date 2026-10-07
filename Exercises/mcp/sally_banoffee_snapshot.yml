@@ -1,0 +1,350 @@
+- generic [active] [ref=f8e1]:
+  - generic [ref=f8e2]:
+    - link "Skip to content" [ref=f8e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f8e4]:
+      - generic [ref=f8e6]:
+        - link [ref=f8e7] [cursor=pointer]:
+          - /url: =https://sallysbakingaddiction.com/sallys-baking-101/
+          - img "Cover and edge design of Sally's Baking 101 Cookbook" [ref=f8e8]
+        - generic [ref=f8e10]:
+          - generic [ref=f8e11]: Sally's Baking 101 Cookbook
+          - link "Order Today!" [ref=f8e12] [cursor=pointer]:
+            - /url: https://sallysbakingaddiction.com/sallys-baking-101/
+      - generic [ref=f8e15]:
+        - link "Sally's Baking Home" [ref=f8e17] [cursor=pointer]:
+          - /url: https://sallysbakingaddiction.com/
+          - text: Sally's Baking
+        - list [ref=f8e18]:
+          - listitem [ref=f8e19]:
+            - link "All Recipes" [ref=f8e20] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/recipe-index/
+          - listitem [ref=f8e24]:
+            - link "Baking Tips" [ref=f8e25] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/category/baking-tips/
+          - listitem [ref=f8e29]:
+            - link "Ingredient" [ref=f8e30] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/ingredient-index/
+          - listitem [ref=f8e34]:
+            - link "Community" [ref=f8e35] [cursor=pointer]:
+              - /url: https://sallysbaking.raptive.com/
+          - listitem [ref=f8e39]:
+            - link "Sally’s Shop" [ref=f8e40] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/baking-tools/
+          - listitem [ref=f8e44]:
+            - link "Videos" [ref=f8e45] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/category/video/
+        - generic [ref=f8e49]:
+          - button "search-toggle" [ref=f8e50] [cursor=pointer]
+          - button "menu" [ref=f8e53] [cursor=pointer]
+      - search [ref=f8e56]:
+        - generic [ref=f8e57]: Search
+        - generic [ref=f8e58]:
+          - searchbox "Search" [ref=f8e59]
+          - button "Search" [ref=f8e60] [cursor=pointer]
+    - generic [ref=f8e63]:
+      - button "Close menu" [ref=f8e64] [cursor=pointer]
+      - generic [ref=f8e65]:
+        - list [ref=f8e66]:
+          - listitem [ref=f8e67]:
+            - link "All Recipes" [ref=f8e68] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/recipe-index/
+          - listitem [ref=f8e73]:
+            - link "Baking Tips" [ref=f8e74] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/category/baking-tips/
+          - listitem [ref=f8e79]:
+            - link "Browse By Ingredient" [ref=f8e80] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/ingredient-index/
+          - listitem [ref=f8e85]:
+            - link "Community" [ref=f8e86] [cursor=pointer]:
+              - /url: https://sallysbaking.raptive.com/
+          - listitem [ref=f8e91]:
+            - link "Sally’s Shop" [ref=f8e92] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/baking-tools/
+          - listitem [ref=f8e97]:
+            - link "Videos" [ref=f8e98] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/category/video/
+        - list [ref=f8e103]:
+          - listitem [ref=f8e104]:
+            - link "Sally’s Baking Challenge" [ref=f8e105] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/category/sallys-baking-traditions/sallys-baking-challenge/
+          - listitem [ref=f8e106]:
+            - link "Type" [ref=f8e107] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/recipes/
+            - button "Submenu" [ref=f8e108]
+          - listitem [ref=f8e112]:
+            - link "Dietary" [ref=f8e113] [cursor=pointer]:
+              - /url: "#"
+            - button "Submenu" [ref=f8e114]
+          - listitem [ref=f8e118]:
+            - link "Occasion" [ref=f8e119] [cursor=pointer]:
+              - /url: "#"
+            - button "Submenu" [ref=f8e120]
+          - listitem [ref=f8e124]:
+            - link "Season" [ref=f8e125] [cursor=pointer]:
+              - /url: /recipe-index/#seasons
+            - button "Submenu" [ref=f8e126]
+          - listitem [ref=f8e130]:
+            - link "Skill Level" [ref=f8e131] [cursor=pointer]:
+              - /url: "#"
+            - button "Submenu" [ref=f8e132]
+        - list [ref=f8e136]:
+          - listitem [ref=f8e137]:
+            - link "About" [ref=f8e138] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/about/
+          - listitem [ref=f8e139]:
+            - link "Accessibility" [ref=f8e140] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/accessibility-statement/
+          - listitem [ref=f8e141]:
+            - link "Cookbook" [ref=f8e142] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/sallys-baking-101/
+          - listitem [ref=f8e143]:
+            - link "Disclosure" [ref=f8e144] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/disclosure-policy/
+          - listitem [ref=f8e145]:
+            - link "FAQs" [ref=f8e146] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/faq/
+          - listitem [ref=f8e147]:
+            - link "Privacy" [ref=f8e148] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/privacy-policy/
+        - generic [ref=f8e149]:
+          - link "facebook" [ref=f8e150] [cursor=pointer]:
+            - /url: https://www.facebook.com/sallysbakingaddiction/
+          - link "instagram" [ref=f8e153] [cursor=pointer]:
+            - /url: https://www.instagram.com/sallysbakeblog/
+          - link "pinterest" [ref=f8e156] [cursor=pointer]:
+            - /url: https://www.pinterest.com/sallysbakeblog/
+          - link "tiktok" [ref=f8e159] [cursor=pointer]:
+            - /url: https://www.tiktok.com/@sallysbaking
+          - link "youtube" [ref=f8e162] [cursor=pointer]:
+            - /url: https://www.youtube.com/c/SallysBakingAddictionVideo
+    - generic [ref=f8e166]:
+      - main [ref=f8e167]:
+        - article [ref=f8e168]:
+          - generic [ref=f8e170]:
+            - generic [ref=f8e172]
+            - heading "Banoffee Pie Recipe" [level=1] [ref=f8e177]
+            - generic [ref=f8e178]
+            - generic [ref=f8e190]
+          - generic [ref=f8e199]:
+            - paragraph [ref=f8e200]
+            - figure [ref=f8e203]
+            - generic [ref=f8e205]
+            - paragraph [ref=f8e207]: "My team and I love all things pie and we’ve worked hard to develop a slew of new recipes over the years, especially around the holiday seasons. Here are some favorites:"
+            - list [ref=f8e208]
+            - generic [ref=f8e1221]
+            - paragraph [ref=f8e225]
+            - generic [ref=f8e227]
+            - figure [ref=f8e228]
+            - heading "What Is Banoffee Pie?" [level=2] [ref=f8e230]
+            - paragraph [ref=f8e231]: A popular English dessert, banoffee = bananas + toffee. A rich combination of different textures and flavors, banoffee pie combines a cookie/biscuit or graham cracker crust with silky dulce de leche, bananas, and homemade whipped cream. I normally have impeccable self control around all the desserts I bake, but I literally could not put down my fork with this pie. Between the soft, crunchy, creamy, gooey, and sweet—there’s no denying banoffee pie’s allure. You’ll be hooked.
+            - paragraph [ref=f8e232]
+            - generic [ref=f8e235]: Advertisement
+            - paragraph [ref=f8e236]
+            - figure [ref=f8e238]
+            - heading "What Is Dulce de Leche?" [level=2] [ref=f8e240]
+            - paragraph [ref=f8e241]
+            - list [ref=f8e244]
+            - paragraph [ref=f8e247]: We’re using the shortcut method today, but I included a link to a classic dulce de leche recipe in the recipe notes. Both are delicious!
+            - figure [ref=f8e248]
+            - heading "Dulce de Leche Made From Sweetened Condensed Milk" [level=2] [ref=f8e250]
+            - paragraph [ref=f8e251]
+            - list [ref=f8e253]
+            - generic [ref=f8e259]
+            - paragraph [ref=f8e260]
+            - list [ref=f8e262]
+            - paragraph [ref=f8e270]
+            - figure [ref=f8e272]
+            - figure [ref=f8e274]
+            - figure [ref=f8e276]
+            - paragraph [ref=f8e278]
+            - paragraph [ref=f8e281]
+            - paragraph [ref=f8e283]: Banoffee pie is so simple that you’ll feel like you’re doing something wrong. You’re not—it really is this easy. If pie crust isn’t your thing, banoffee pie is!
+            - generic [ref=f8e284]: Advertisement
+            - figure [ref=f8e285]
+            - paragraph [ref=f8e287]
+            - separator [ref=f8e289]
+            - paragraph [ref=f8e290]
+            - generic [ref=f8e295]
+            - generic [ref=f8e320]
+            - generic [ref=f8e338]
+            - figure [ref=f8e523]
+            - generic [ref=f8e527]
+          - generic [ref=f8e549]:
+            - link "Pinterest" [ref=f8e550] [cursor=pointer]:
+              - /url: https://pinterest.com/pin/create/button/?url=https://sallysbakingaddiction.com/banoffee-pie/&media=https%3A%2F%2Fsallysbakingaddiction.com%2Fwp-content%2Fuploads%2F2018%2F10%2Fwhipped-cream-banoffee-pie.jpg&description=Banoffee Pie Recipe
+            - link "Facebook" [ref=f8e554] [cursor=pointer]:
+              - /url: http://www.facebook.com/share.php?u=https://sallysbakingaddiction.com/banoffee-pie/&t=Banoffee Pie Recipe
+            - link "Email" [ref=f8e558] [cursor=pointer]:
+              - /url: "mailto:?body=I thought you might enjoy this post: Banoffee Pie Recipe, https://sallysbakingaddiction.com/banoffee-pie/"
+          - generic [ref=f8e562]:
+            - heading "You Might Also Like..." [level=2] [ref=f8e563]
+            - generic [ref=f8e564]
+        - generic [ref=f8e611]:
+          - img "sally mckenney headshot purple shirt." [ref=f8e613]
+          - generic [ref=f8e614]:
+            - generic [ref=f8e615]: About the Author
+            - heading "Sally McKenney" [level=2] [ref=f8e616]
+            - paragraph [ref=f8e618]: Sally McKenney is a baker, food photographer, and New York Times best-selling author. Her kitchen-tested recipes and step-by-step tutorials have given millions of readers the knowledge and confidence to bake from scratch. Sally’s work has been featured on TODAY, Good Morning America, Taste of Home, People, and more.
+            - link "Read More" [ref=f8e619] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/about-sally-mckenney/
+            - generic [ref=f8e623]
+        - generic [ref=f8e639]:
+          - generic [ref=f8e640]:
+            - heading "Leave a Comment" [level=2] [ref=f8e641]
+            - generic [ref=f8e642]
+          - paragraph [ref=f8e696]:
+            - text: This site uses Akismet to reduce spam.
+            - link "Learn how your comment data is processed." [ref=f8e697] [cursor=pointer]:
+              - /url: https://akismet.com/privacy/
+          - heading "Reader Comments and Reviews" [level=2] [ref=f8e698]
+          - list [ref=f8e699]:
+            - listitem [ref=f8e700]
+            - listitem [ref=f8e708]
+            - listitem [ref=f8e716]
+            - listitem [ref=f8e724]
+            - listitem [ref=f8e742]
+            - listitem [ref=f8e750]
+            - listitem [ref=f8e774]
+            - listitem [ref=f8e782]
+            - listitem [ref=f8e799]
+            - listitem [ref=f8e807]
+            - listitem [ref=f8e824]
+            - listitem [ref=f8e848]
+            - listitem [ref=f8e872]
+            - listitem [ref=f8e880]
+            - listitem [ref=f8e897]
+          - navigation [ref=f8e905]:
+            - heading "Comment navigation" [level=3] [ref=f8e906]
+            - link "Older Comments" [ref=f8e909] [cursor=pointer]:
+              - /url: https://sallysbakingaddiction.com/banoffee-pie/comment-page-3/#comments
+      - complementary [ref=f8e910]:
+        - generic [ref=f8e911]:
+          - generic [ref=f8e913]:
+            - img "sally mckenney headshot purple shirt." [ref=f8e915]
+            - generic [ref=f8e916]
+          - generic [ref=f8e942]:
+            - heading "Popular Right Now" [level=2] [ref=f8e944]
+            - generic [ref=f8e946]
+        - iframe [ref=f8e1251]:
+          - generic [ref=f32e2]:
+            - generic [ref=f32e3]
+            - insertion [ref=f32e17]
+        - iframe [ref=f8e1241]:
+          - generic [ref=f28e2]:
+            - generic [ref=f28e3]
+            - insertion [ref=f28e17]
+        - iframe [ref=f8e1253]:
+          - generic [ref=f37e1]:
+            - iframe [ref=f37e3]:
+              - generic [ref=f58e2]:
+                - link [ref=f58e4] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/audience-network/?reporterProfileUrn=urn:li:fs_miniProfile:AFcAABneWngBFzRzkXHKJLSErPSewXTcbx5DxNg&entityUrn=urn:li:sponsoredCreative:1626926446&contentSource=ADS_LAN
+                - link "The Future of Security Meets in Riyadh The Future of Security Meets in Riyadh Global Security & Technology Summit (GSTS) Global Security & Technology Summit (GSTS) Learn more" [ref=f58e7] [cursor=pointer]:
+                  - /url: https://rtb-us-west.linkedin.com/lax/clk?trk=comp_CwEAAAGhAQGG4aWXOdIXg7cXXb3U1SMzaWWR0Y53yQ8ys9yKo76A_RyW4gZse_gfluxD_F2yf1XZ7kKviOlhoFkRoKSkPXD6UYCjNy1YbsuSMZgnaXIOgx-v4EDo2th0xJtZj7GI3Wf17M788_BvQ17L-1YTwGbUyNxJdm8eI-2VsM43uhtH_y8HzFxz7EtVksATHi693yOOtYZz8-kjAzhninvKm_TO_0TMn1OO7jVCFh_3-eQwFugJCKkHsJmViBi9u0SSeEax5Cu8I-1Qh-D0QGul7rv57qfBUVBh8C93x6_VBaIcz9gWyFrG13eVNNv-41Iyds1MyAh3qHEMhkWxJzh83BmCrbgd6VaXC53lG08cWnCPUo5ihIUXpusJX-4DyTeDz7ZGEQcne8yznSF9VQwA9Hx2tXiX1QpYcKaqZb1MnbSmrTJEPeG0irWViDkSeNWTDr7tsBrz-SKMcBtRm37L1sAP6Gcv029biOveb17Lh_DC5h40Eapg8RpFToGGc_NgycCqfAirj4G1rJWJakYT5P3EAuN7ngrkjTzIs9Qj2W41ecj_ke36xrmSaeW-lbId2znlH-1BlJ0atBFrN0s4yHnA4vj7vJdAkjWRL_E_Gg3UIuBYqh4uGyDYcpju3J9fjPZGUbpQl1LpZBUDoN3ed5noUz9zu2GtaMw6hGNMnUtNdp3lyP8VKt1wm2JtbalXBDl_qyW3H4TfTVpfIFJ3fzHyBbv5sUjhAJytwGZ9ywFfiyvX1-Doq3OqfBQCjdEJg1OAm--di6QiEPENlI5Qpb2wh-4xqPcYM7Uzeh85QKDm6x79ksSZlBKp0Cechej6sErpIoBAXUWvnrlxVeJlVZr24DwcI_L5aATeUc_FVyLQ4kqn-FmXaTQVfnONatbCIokyU7VwwBJX0Sud2PhigZ8nAjQA5SccNBRBVH81c60p13hfrmwEOi95FcaypDMxzMNvb05G8f5XtCABQENrswBf3Jq9F6N93EBnhw&action=click&laxrid=6a5bf92c-c228-4878-8044-ba8e768ba818&laxbid=2&eid=3&wpub=sallysbakingaddiction.com&crtype=su&laxerid=1871410420767585806345-37&pid=1884&adfmt=3&wp=0.035&urle=CwEAAAGhAQGG5BLOMuYNOs2Ncxm70TWan3UtmeArjhg_9AuCrroDzfUf1ZBnjg67LEa-rp7uUzcTKvI9sZhAC2cU3hG3BTwbEwmDN6MaeyopeZA8MM8289egwJ5RG1SGfQARROSwEULp7aUHHwqrSRT0Fks1r8Pl__Sb4XRvfO2ZoDhKYiVKcy65lN66-cqkMq5ame2tWNU2so1VuOObS0-Uf8bsYggnP3LaW-yaS7-PEYdqrEY_Nxik7TBRuD3lX1kPl7KYNBAaTeJW1NOijJGQ_aYx94hyL45vl3lDahu6vxpkIKOAtlJJOkSs7_nR_xRYYuVYRK7apnnGLj5VklmRl_yaVCK2lUn1kdI23X45OgxjhjE_eX5QA5ccT7ULFGFlYfxuLzJS2XkvmKIRUB4c8irjsi-nB3RIbfp0Smnne0BTyYVl74ROJhJ2V8C39M07mVS2&urlhash=vOVM
+                  - generic [ref=f58e8]:
+                    - generic:
+                      - img "The Future of Security Meets in Riyadh"
+                  - generic [ref=f58e9]:
+                    - generic [ref=f58e10]: The Future of Security Meets in Riyadh
+                    - generic [ref=f58e11]:
+                      - generic [ref=f58e12]:
+                        - img "Global Security & Technology Summit (GSTS)" [ref=f58e14]
+                        - generic [ref=f58e15]: Global Security & Technology Summit (GSTS)
+                      - generic [ref=f58e16]: Learn more
+            - generic [ref=f37e4] [cursor=pointer]
+    - generic [ref=f8e1087]:
+      - generic [ref=f8e1089]:
+        - generic [ref=f8e1090]: As Seen On
+        - generic [ref=f8e1093]:
+          - img "Better Homes & Gardens" [ref=f8e1094]
+          - img "Good Morning America" [ref=f8e1095]
+          - img "Huffington Post" [ref=f8e1096]
+          - img "Taste of Home" [ref=f8e1097]
+          - img "People" [ref=f8e1098]
+          - img "Today Show" [ref=f8e1099]
+      - generic [ref=f8e1103]:
+        - heading "Sign Up for My Email List" [level=2] [ref=f8e1105]
+        - paragraph [ref=f8e1107]: Something sweet for your inbox! Join 350K others and subscribe to my free email list. You’ll get every new recipe and baking post as they’re published, plus an email with my most popular baking tips and recipes.
+        - generic [ref=f8e1108]:
+          - textbox "Your first name" [ref=f8e1110]
+          - textbox "Your email address" [ref=f8e1112]
+          - button [ref=f8e1114]:
+            - group [ref=f8e1115]
+          - button "Yes, Sign Me Up" [ref=f8e1118] [cursor=pointer]
+        - paragraph [ref=f8e1121]: We respect your privacy. Unsubscribe at any time.
+      - generic [ref=f8e1124]:
+        - heading "Sally’s Classics" [level=2] [ref=f8e1126]
+        - generic [ref=f8e1127]:
+          - generic [ref=f8e1128]:
+            - article [ref=f8e1129]
+            - article [ref=f8e1140]
+            - article [ref=f8e1151]
+            - article [ref=f8e1162]
+            - article [ref=f8e1173]
+            - article [ref=f8e1184]
+          - link "View All Recipes" [ref=f8e1195] [cursor=pointer]:
+            - /url: https://sallysbakingaddiction.com/recipe-index/
+    - contentinfo [ref=f8e1199]:
+      - generic [ref=f8e1200]:
+        - link "back-to-top" [ref=f8e1201] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f8e1204]: Back to top
+        - generic [ref=f8e1205]:
+          - list [ref=f8e1206]:
+            - listitem [ref=f8e1207]
+            - listitem [ref=f8e1209]
+            - listitem [ref=f8e1211]
+            - listitem [ref=f8e1213]
+            - listitem [ref=f8e1215]
+            - listitem [ref=f8e1217]
+          - generic [ref=f8e1219]: ©2026 Sally's Baking. All rights reserved.
+  - iframe [ref=f8e1254]:
+    - iframe [ref=f30e2]:
+      - generic [ref=f36e1]:
+        - generic [ref=f36e2]:
+          - table [ref=f36e4]:
+            - rowgroup [ref=f36e5]
+          - iframe
+          - iframe
+        - generic:
+          - button [ref=f36e15]
+          - link:
+            - /url: https://yahoo.com
+          - textbox [ref=f36e16]
+  - generic [ref=f8e1231]:
+    - generic [ref=f8e1232]:
+      - text: Information from your device can be used to personalize your ad experience.
+      - link "Do not sell or share my personal information." [ref=f8e1233] [cursor=pointer]:
+        - /url: /
+    - link "Terms of Content Use" [ref=f8e1235] [cursor=pointer]:
+      - /url: /
+    - text: A Raptive Partner Site
+  - generic:
+    - generic:
+      - generic:
+        - generic "This page has been favorited 1,593 times": 1,593
+        - generic:
+          - button "View my favorites":
+            - generic
+          - button "Add to favorites" [ref=f8e1256] [cursor=pointer]
+          - generic: Added to Favorites
+          - generic:
+            - generic
+          - generic:
+            - generic
+  - generic:
+    - dialog [aria-hidden]:
+      - generic:
+        - generic:
+          - button [ref=f8e1261] [cursor=pointer]:
+            - generic [ref=f8e1262]: "0"
+          - button [ref=f8e1267] [cursor=pointer]
+      - generic:
+        - button [ref=f8e1270] [cursor=pointer]
+        - generic: Powered by Slickstream
+      - generic:
+        - generic:
+          - generic:
+            - generic
+        - main
