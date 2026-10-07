@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException
 from backend import market
 from backend.accounts import Account
 from backend.database import read_log
-from backend.trading_floor import names, lastnames, short_model_names
+from backend.trading_floor import lastnames, names, short_model_names
 
 # Mirrors the log colours in demo/ so the frontend reproduces the same panel.
 LOG_COLORS = {
