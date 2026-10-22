@@ -1,7 +1,0 @@
-{
-  "python.terminal.useEnvFile": true,
-  "python.REPL.enableREPLSmartSend": true,
-  "python.REPL.sendToNativeREPL": true,
-  "python.languageServer": "Default",
-  "python-envs.defaultEnvManager": "ms-python.python:system"
-}

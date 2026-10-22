@@ -1,8 +1,0 @@
-{"type":"entity","name":"UserProfile","entityType":"User","observations":["User is an LLM engineer undergoing a course on Agentic AI.","Course includes MCP (Model Context Protocol).","User states: MCP equips an agent with tools, resources, and prompts from external sources."]}
-{"type":"entity","name":"MCP","entityType":"Concept","observations":["MCP stands for Model Context Protocol."]}
-{"type":"entity","name":"Agentic AI Course","entityType":"Course","observations":["User is undergoing a course on Agentic AI."]}
-{"type":"entity","name":"AG","entityType":"person","observations":["Name: AG","Role: LLM engineer","Course: Agentic AI","Course includes: MCP","User stated: My name is AG.","Interests: Agentic AI and MCP (Model Context Protocol).","Stated: MCP provides tools, resources, and prompts from external sources.","Name: AG (user stated: 'My name is AG.')"]}
-{"type":"relation","from":"UserProfile","to":"Agentic AI Course","relationType":"isEnrolledIn"}
-{"type":"relation","from":"Agentic AI Course","to":"MCP","relationType":"includesTopic"}
-{"type":"relation","from":"MCP","to":"UserProfile","relationType":"isRelevantTo"}
-{"type":"relation","from":"AG","to":"MCP","relationType":"learning"}
