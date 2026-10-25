@@ -1,0 +1,63 @@
+{
+  "dialect": "SQLite",
+  "version": 1,
+  "tables": {
+    "users": {
+      "primary_key": ["id"],
+      "columns": {
+        "id": { "type": "TEXT", "not_null": true },
+        "username": { "type": "TEXT", "not_null": true, "unique": true }
+      }
+    },
+    "boards": {
+      "primary_key": ["id"],
+      "columns": {
+        "id": { "type": "TEXT", "not_null": true },
+        "user_id": {
+          "type": "TEXT",
+          "not_null": true,
+          "unique": true,
+          "references": "users.id",
+          "on_delete": "CASCADE"
+        }
+      }
+    },
+    "columns": {
+      "primary_key": ["board_id", "id"],
+      "columns": {
+        "board_id": {
+          "type": "TEXT",
+          "not_null": true,
+          "references": "boards.id",
+          "on_delete": "CASCADE"
+        },
+        "id": { "type": "TEXT", "not_null": true },
+        "title": { "type": "TEXT", "not_null": true },
+        "position": { "type": "INTEGER", "not_null": true }
+      },
+      "unique": [["board_id", "position"]]
+    },
+    "cards": {
+      "primary_key": ["board_id", "id"],
+      "columns": {
+        "board_id": {
+          "type": "TEXT",
+          "not_null": true,
+          "references": "boards.id",
+          "on_delete": "CASCADE"
+        },
+        "id": { "type": "TEXT", "not_null": true },
+        "column_id": {
+          "type": "TEXT",
+          "not_null": true,
+          "references": ["columns.board_id", "columns.id"],
+          "on_delete": "CASCADE"
+        },
+        "title": { "type": "TEXT", "not_null": true },
+        "details": { "type": "TEXT", "not_null": true },
+        "position": { "type": "INTEGER", "not_null": true }
+      },
+      "unique": [["board_id", "column_id", "position"]]
+    }
+  }
+}

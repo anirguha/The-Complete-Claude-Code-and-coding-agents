@@ -1,0 +1,19 @@
+services:
+  pm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_PATH: /app/data/kanban.db
+      STATIC_ROOT: /app/frontend/out
+      PYTHONPATH: /app/backend
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      SESSION_SECRET: ${SESSION_SECRET:-local-development-secret-change-me}
+    volumes:
+      - pm-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  pm-data:
