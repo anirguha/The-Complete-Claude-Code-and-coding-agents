@@ -25,9 +25,13 @@ const request = async <T>(
   });
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as
-      | { detail?: string }
+      | { detail?: unknown }
       | null;
-    throw new Error(payload?.detail ?? `Request failed (${response.status}).`);
+    throw new Error(
+      typeof payload?.detail === "string"
+        ? payload.detail
+        : `Request failed (${response.status}).`
+    );
   }
   if (response.status === 204) {
     return undefined as T;

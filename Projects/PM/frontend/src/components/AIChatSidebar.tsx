@@ -2,13 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { api, type ChatTurn } from "@/lib/api";
-import type { BoardData } from "@/lib/kanban";
 
 type AIChatSidebarProps = {
-  onBoardChange: (board: BoardData) => void;
+  onBoardUpdated: () => void;
 };
 
-export const AIChatSidebar = ({ onBoardChange }: AIChatSidebarProps) => {
+export const AIChatSidebar = ({ onBoardUpdated }: AIChatSidebarProps) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -27,7 +26,7 @@ export const AIChatSidebar = ({ onBoardChange }: AIChatSidebarProps) => {
     try {
       const result = await api.chat(question, turns.slice(-40));
       setTurns([...nextTurns, { role: "assistant", content: result.response }]);
-      onBoardChange(result.board);
+      onBoardUpdated();
     } catch (requestError) {
       setError(
         requestError instanceof Error ? requestError.message : "Chat failed."

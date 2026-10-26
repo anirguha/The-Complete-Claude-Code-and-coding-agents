@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import clsx from "clsx";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -23,17 +23,20 @@ const ColumnTitleInput = ({
   onCommit: (title: string) => void;
 }) => {
   const [draft, setDraft] = useState<string | null>(null);
+  const cancelled = useRef(false);
 
   return (
     <input
       value={draft ?? title}
-      onChange={(event) => {
-        setDraft(event.target.value);
-        const next = event.target.value.trim();
-        if (next && next !== title) onCommit(next);
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        const next = draft?.trim();
+        if (!cancelled.current && next && next !== title) onCommit(next);
+        cancelled.current = false;
+        setDraft(null);
       }}
-      onBlur={() => setDraft(null)}
       onKeyDown={(event) => {
+        if (event.key === "Escape") cancelled.current = true;
         if (event.key === "Enter" || event.key === "Escape") {
           event.currentTarget.blur();
         }

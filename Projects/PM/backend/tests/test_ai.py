@@ -69,12 +69,12 @@ async def test_sends_board_history_and_applies_structured_actions(monkeypatch):
     monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
     history = [{"role": "assistant", "content": "Prior answer"}]
 
-    result = await ai.answer_chat(
+    reply, actions = await ai.answer_chat(
         DEFAULT_BOARD, ChatRequest(message="Rename backlog", history=history)
     )
 
-    assert result.response == "Updated the column."
-    assert result.board.columns[0].title == "To Do"
+    assert reply == "Updated the column."
+    assert ai.apply_actions(DEFAULT_BOARD, actions).columns[0].title == "To Do"
     messages = fake_client.request["json"]["messages"]
     assert "Board JSON" in messages[0]["content"]
     assert messages[1] == {"role": "assistant", "content": "Prior answer"}

@@ -2,7 +2,7 @@ import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 from app.models import Board
 
@@ -161,45 +161,49 @@ def _save_board(connection: sqlite3.Connection, user_id: str, board: Board) -> N
             )
 
 
+def _read_board(connection: sqlite3.Connection, user_id: str) -> Board:
+    columns = connection.execute(
+        """
+        SELECT id, title FROM columns
+        WHERE board_id = ? ORDER BY position
+        """,
+        (f"board-{user_id}",),
+    ).fetchall()
+    cards = connection.execute(
+        """
+        SELECT id, column_id, title, details FROM cards
+        WHERE board_id = ? ORDER BY position
+        """,
+        (f"board-{user_id}",),
+    ).fetchall()
+    card_ids_by_column: dict[str, list[str]] = {row["id"]: [] for row in columns}
+    card_map = {}
+    for row in cards:
+        card_ids_by_column[row["column_id"]].append(row["id"])
+        card_map[row["id"]] = {
+            "id": row["id"],
+            "title": row["title"],
+            "details": row["details"],
+        }
+    return Board.model_validate(
+        {
+            "columns": [
+                {
+                    "id": row["id"],
+                    "title": row["title"],
+                    "cardIds": card_ids_by_column[row["id"]],
+                }
+                for row in columns
+            ],
+            "cards": card_map,
+        }
+    )
+
+
 def load_board(user_id: str) -> Board:
     with connect() as connection:
         _ensure_board(connection, user_id)
-        columns = connection.execute(
-            """
-            SELECT id, title FROM columns
-            WHERE board_id = ? ORDER BY position
-            """,
-            (f"board-{user_id}",),
-        ).fetchall()
-        cards = connection.execute(
-            """
-            SELECT id, column_id, title, details FROM cards
-            WHERE board_id = ? ORDER BY position
-            """,
-            (f"board-{user_id}",),
-        ).fetchall()
-        card_ids_by_column: dict[str, list[str]] = {row["id"]: [] for row in columns}
-        card_map = {}
-        for row in cards:
-            card_ids_by_column[row["column_id"]].append(row["id"])
-            card_map[row["id"]] = {
-                "id": row["id"],
-                "title": row["title"],
-                "details": row["details"],
-            }
-        return Board.model_validate(
-            {
-                "columns": [
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "cardIds": card_ids_by_column[row["id"]],
-                    }
-                    for row in columns
-                ],
-                "cards": card_map,
-            }
-        )
+        return _read_board(connection, user_id)
 
 
 def save_board(user_id: str, board: Board) -> Board:
@@ -207,3 +211,14 @@ def save_board(user_id: str, board: Board) -> Board:
         _ensure_board(connection, user_id)
         _save_board(connection, user_id, board)
     return board
+
+
+def update_board(user_id: str, change: Callable[[Board], Board]) -> Board:
+    with connect() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        _ensure_board(connection, user_id)
+        board = _read_board(connection, user_id)
+        updated = change(board)
+        if updated != board:
+            _save_board(connection, user_id, updated)
+        return updated

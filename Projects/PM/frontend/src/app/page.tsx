@@ -108,6 +108,20 @@ export default function Home() {
       });
   };
 
+  // The server applies AI changes to the latest saved board, so reload it once
+  // any pending saves have finished instead of using the chat response board.
+  const handleAIBoardUpdate = () => {
+    saveQueue.current = saveQueue.current.then(loadBoard).catch(
+      (requestError: unknown) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Could not reload the board."
+        );
+      }
+    );
+  };
+
   if (userState === "loading") {
     return (
       <main className="flex min-h-screen items-center justify-center text-sm text-[var(--gray-text)]">
@@ -151,7 +165,7 @@ export default function Home() {
         )}
         <KanbanBoard board={board} onBoardChange={handleBoardChange} />
       </div>
-      <AIChatSidebar onBoardChange={setBoard} />
+      <AIChatSidebar onBoardUpdated={handleAIBoardUpdate} />
     </div>
   );
 }
