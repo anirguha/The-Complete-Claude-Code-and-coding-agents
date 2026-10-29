@@ -25,15 +25,21 @@ const request = async <T>(
   });
   if (!response.ok) {
     const payload = (await response.json().catch(() => null)) as
-      | { detail?: string }
+      | { detail?: unknown }
       | null;
-    throw new Error(payload?.detail ?? `Request failed (${response.status}).`);
+    throw new Error(
+      typeof payload?.detail === "string"
+        ? payload.detail
+        : `Request failed (${response.status}).`
+    );
   }
   if (response.status === 204) {
     return undefined as T;
   }
   return (await response.json()) as T;
 };
+
+type User = { username: string };
 
 export type ChatTurn = {
   role: "user" | "assistant";
@@ -46,16 +52,13 @@ export type ChatResult = {
 };
 
 export const api = {
-  currentUser: () => request<{ username: string }>("/auth/me"),
+  currentUser: () => request<User>("/auth/me"),
   login: (username: string, password: string) =>
-    request<{ username: string }>("/auth/login", {
+    request<User>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
-  logout: () =>
-    request<void>("/auth/logout", {
-      method: "POST",
-    }),
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
   getBoard: () => request<BoardData>("/board"),
   saveBoard: (board: BoardData) =>
     request<BoardData>("/board", {

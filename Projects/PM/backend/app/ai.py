@@ -6,7 +6,7 @@ import uuid
 import httpx
 from fastapi import HTTPException
 
-from app.models import Board, ChatMessage, ChatRequest, ChatResponse
+from app.models import Board, ChatRequest
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -114,9 +114,7 @@ def apply_actions(board: Board, actions: list[dict]) -> Board:
     return Board.model_validate(data)
 
 
-async def answer_chat(
-    board: Board, request: ChatRequest
-) -> ChatResponse:
+async def answer_chat(board: Board, request: ChatRequest) -> tuple[str, list[dict]]:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise HTTPException(
@@ -124,7 +122,6 @@ async def answer_chat(
             detail="AI chat is unavailable because OPENROUTER_API_KEY is not configured.",
         )
 
-    history: list[ChatMessage] = request.history
     messages = [
         _message(
             "system",
@@ -139,7 +136,7 @@ async def answer_chat(
             "(0-based, default end). delete_card: card_id. Board JSON: "
             + _board_for_ai(board),
         ),
-        *[_message(item.role, item.content) for item in history],
+        *[_message(item.role, item.content) for item in request.history],
         _message("user", request.message),
     ]
 
@@ -185,17 +182,9 @@ async def answer_chat(
         reply = data["response"]
         if not isinstance(reply, str):
             raise ValueError("AI response text is missing.")
-        updated_board = board
-        if data["actions"]:
-            updated_board = apply_actions(board, data["actions"])
-    except (
-        KeyError,
-        IndexError,
-        StopIteration,
-        TypeError,
-        ValueError,
-        json.JSONDecodeError,
-    ) as error:
+        actions = data["actions"]
+        apply_actions(board, actions)
+    except (KeyError, IndexError, StopIteration, TypeError, ValueError) as error:
         logger.warning(
             "Invalid AI response (%s): %s; body=%.2000s",
             type(error).__name__,
@@ -207,4 +196,4 @@ async def answer_chat(
             detail="AI returned an invalid response. No board changes were saved.",
         ) from error
 
-    return ChatResponse(response=reply, board=updated_board)
+    return reply, actions

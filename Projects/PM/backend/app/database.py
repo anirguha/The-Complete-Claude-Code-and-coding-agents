@@ -1,8 +1,8 @@
 import os
 import sqlite3
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from collections.abc import Iterator
 
 from app.models import Board
 
@@ -73,11 +73,8 @@ def connect() -> Iterator[sqlite3.Connection]:
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     try:
-        yield connection
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
+        with connection:
+            yield connection
     finally:
         connection.close()
 
@@ -119,16 +116,17 @@ def initialize_database() -> None:
 
 
 def _ensure_board(connection: sqlite3.Connection, user_id: str) -> None:
+    board_id = f"board-{user_id}"
     connection.execute(
         "INSERT OR IGNORE INTO users (id, username) VALUES (?, ?)",
         (user_id, user_id),
     )
     connection.execute(
         "INSERT OR IGNORE INTO boards (id, user_id) VALUES (?, ?)",
-        (f"board-{user_id}", user_id),
+        (board_id, user_id),
     )
     has_columns = connection.execute(
-        "SELECT 1 FROM columns WHERE board_id = ? LIMIT 1", (f"board-{user_id}",)
+        "SELECT 1 FROM columns WHERE board_id = ? LIMIT 1", (board_id,)
     ).fetchone()
     if has_columns is None:
         _save_board(connection, user_id, DEFAULT_BOARD)
@@ -161,49 +159,53 @@ def _save_board(connection: sqlite3.Connection, user_id: str, board: Board) -> N
             )
 
 
+def _read_board(connection: sqlite3.Connection, user_id: str) -> Board:
+    board_id = f"board-{user_id}"
+    columns = connection.execute(
+        "SELECT id, title FROM columns WHERE board_id = ? ORDER BY position",
+        (board_id,),
+    ).fetchall()
+    cards = connection.execute(
+        "SELECT id, column_id, title, details FROM cards "
+        "WHERE board_id = ? ORDER BY position",
+        (board_id,),
+    ).fetchall()
+    card_ids_by_column: dict[str, list[str]] = {row["id"]: [] for row in columns}
+    card_map = {}
+    for row in cards:
+        card_ids_by_column[row["column_id"]].append(row["id"])
+        card_map[row["id"]] = {
+            "id": row["id"],
+            "title": row["title"],
+            "details": row["details"],
+        }
+    return Board.model_validate(
+        {
+            "columns": [
+                {
+                    "id": row["id"],
+                    "title": row["title"],
+                    "cardIds": card_ids_by_column[row["id"]],
+                }
+                for row in columns
+            ],
+            "cards": card_map,
+        }
+    )
+
+
 def load_board(user_id: str) -> Board:
     with connect() as connection:
         _ensure_board(connection, user_id)
-        columns = connection.execute(
-            """
-            SELECT id, title FROM columns
-            WHERE board_id = ? ORDER BY position
-            """,
-            (f"board-{user_id}",),
-        ).fetchall()
-        cards = connection.execute(
-            """
-            SELECT id, column_id, title, details FROM cards
-            WHERE board_id = ? ORDER BY position
-            """,
-            (f"board-{user_id}",),
-        ).fetchall()
-        card_ids_by_column: dict[str, list[str]] = {row["id"]: [] for row in columns}
-        card_map = {}
-        for row in cards:
-            card_ids_by_column[row["column_id"]].append(row["id"])
-            card_map[row["id"]] = {
-                "id": row["id"],
-                "title": row["title"],
-                "details": row["details"],
-            }
-        return Board.model_validate(
-            {
-                "columns": [
-                    {
-                        "id": row["id"],
-                        "title": row["title"],
-                        "cardIds": card_ids_by_column[row["id"]],
-                    }
-                    for row in columns
-                ],
-                "cards": card_map,
-            }
-        )
+        return _read_board(connection, user_id)
 
 
-def save_board(user_id: str, board: Board) -> Board:
+def update_board(user_id: str, change: Callable[[Board], Board]) -> Board:
     with connect() as connection:
+        connection.execute("BEGIN IMMEDIATE")
         _ensure_board(connection, user_id)
-        _save_board(connection, user_id, board)
-    return board
+        board = _read_board(connection, user_id)
+        updated = change(board)
+        if updated != board:
+            _save_board(connection, user_id, updated)
+        return updated

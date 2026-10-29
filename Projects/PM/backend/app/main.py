@@ -1,18 +1,19 @@
-from contextlib import asynccontextmanager
 import hmac
 import os
 import secrets
-from pathlib import Path
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.ai import answer_chat
-from app.database import initialize_database, load_board, save_board
+from app.ai import answer_chat, apply_actions
+from app.database import initialize_database, load_board, update_board
 from app.models import Board, ChatRequest, ChatResponse, Credentials
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -55,8 +56,8 @@ def health() -> dict[str, str]:
 
 @app.post("/api/auth/login")
 def login(credentials: Credentials, request: Request) -> dict[str, str]:
-    valid_username = hmac.compare_digest(credentials.username, "user")
-    valid_password = hmac.compare_digest(credentials.password, "password")
+    valid_username = hmac.compare_digest(credentials.username.encode(), b"user")
+    valid_password = hmac.compare_digest(credentials.password.encode(), b"password")
     if not (valid_username and valid_password):
         raise HTTPException(status_code=401, detail="Invalid username or password.")
     request.session.clear()
@@ -70,40 +71,52 @@ def current_user(user_id: str = Depends(authenticated_user)) -> dict[str, str]:
     return {"username": user_id}
 
 
-@app.post("/api/auth/logout")
-def logout(
-    request: Request, user_id: str = Depends(authenticated_user)
-) -> Response:
+@app.post("/api/auth/logout", dependencies=[Depends(authenticated_user)])
+def logout(request: Request) -> Response:
     request.session.clear()
     return Response(status_code=204)
 
 
-@app.get("/api/board", response_model=Board)
+@app.get("/api/board")
 def get_board(user_id: str = Depends(authenticated_user)) -> Board:
     return load_board(user_id)
 
 
-@app.put("/api/board", response_model=Board)
-def put_board(
-    board: Board, user_id: str = Depends(authenticated_user)
-) -> Board:
-    return save_board(user_id, board)
+@app.put("/api/board")
+def put_board(board: Board, user_id: str = Depends(authenticated_user)) -> Board:
+    def replace(current: Board) -> Board:
+        if [c.id for c in board.columns] != [c.id for c in current.columns]:
+            raise HTTPException(
+                status_code=400, detail="Columns can be renamed but not changed."
+            )
+        return board
+
+    return update_board(user_id, replace)
 
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/api/chat")
 async def chat(
     chat_request: ChatRequest,
     user_id: str = Depends(authenticated_user),
 ) -> ChatResponse:
-    current_board = load_board(user_id)
-    result = await answer_chat(current_board, chat_request)
-    if result.board != current_board:
-        save_board(user_id, result.board)
-    return result
+    reply, actions = await answer_chat(load_board(user_id), chat_request)
+    # Apply the actions to the latest board so edits made while the AI was
+    # responding are kept.
+    try:
+        board = update_board(user_id, lambda latest: apply_actions(latest, actions))
+    except (KeyError, StopIteration, ValueError) as error:
+        raise HTTPException(
+            status_code=409,
+            detail="The board changed while the AI was responding. "
+            "No AI changes were saved.",
+        ) from error
+    return ChatResponse(response=reply, board=board)
 
 
 @app.get("/{path:path}", include_in_schema=False)
 def serve_frontend(path: str) -> FileResponse:
+    if path == "api" or path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found.")
     requested_path = (STATIC_ROOT / path).resolve()
     if requested_path != STATIC_ROOT and STATIC_ROOT not in requested_path.parents:
         raise HTTPException(status_code=404, detail="Not found.")

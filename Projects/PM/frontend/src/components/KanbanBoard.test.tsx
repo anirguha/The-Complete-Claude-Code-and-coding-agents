@@ -20,6 +20,28 @@ describe("KanbanBoard", () => {
     expect(within(column).getByLabelText("Column title")).toHaveValue("New Name");
   });
 
+  it("saves a column rename once, on Enter", async () => {
+    const onBoardChange = vi.fn();
+    render(<KanbanBoard onBoardChange={onBoardChange} />);
+    const input = within(getFirstColumn()).getByLabelText("Column title");
+    await userEvent.clear(input);
+    await userEvent.type(input, "Queued");
+    expect(onBoardChange).not.toHaveBeenCalled();
+    await userEvent.type(input, "{Enter}");
+    expect(onBoardChange).toHaveBeenCalledOnce();
+    expect(onBoardChange.mock.calls[0][0].columns[0].title).toBe("Queued");
+  });
+
+  it("reverts a column rename on Escape", async () => {
+    const onBoardChange = vi.fn();
+    render(<KanbanBoard onBoardChange={onBoardChange} />);
+    const input = within(getFirstColumn()).getByLabelText("Column title");
+    await userEvent.clear(input);
+    await userEvent.type(input, "Discarded{Escape}");
+    expect(onBoardChange).not.toHaveBeenCalled();
+    expect(input).toHaveValue("Backlog");
+  });
+
   it("adds and removes a card", async () => {
     render(<KanbanBoard />);
     const column = getFirstColumn();

@@ -1,13 +1,23 @@
 from fastapi.testclient import TestClient
 
-from app import database
-from app.main import app
+from app import database, main
+
+
+def rename_action(column_id, title):
+    return {
+        "type": "rename_column",
+        "column_id": column_id,
+        "card_id": None,
+        "title": title,
+        "details": None,
+        "position": None,
+    }
 
 
 def create_client(tmp_path, monkeypatch):
     monkeypatch.setattr(database, "DATABASE_PATH", tmp_path / "kanban.db")
     database.initialize_database()
-    return TestClient(app)
+    return TestClient(main.app)
 
 
 def signed_in_client(tmp_path, monkeypatch):
@@ -67,7 +77,7 @@ def test_database_supports_same_card_ids_on_different_users(
     first = database.load_board("user")
     second = database.load_board("another-user")
     second.columns[0].title = "Separate board"
-    database.save_board("another-user", second)
+    database.update_board("another-user", lambda _: second)
 
     assert first.cards.keys() == second.cards.keys()
     assert database.load_board("user").columns[0].title == "Backlog"
@@ -87,14 +97,10 @@ def test_chat_provider_failure_keeps_board_unchanged(
 
 
 def test_chat_saves_a_valid_ai_board_update(tmp_path, monkeypatch):
-    from app import main
-
     client = signed_in_client(tmp_path, monkeypatch)
 
     async def valid_update(board, chat_request):
-        updated = board.model_copy(deep=True)
-        updated.columns[0].title = "Queued"
-        return main.ChatResponse(response="Renamed.", board=updated)
+        return "Renamed.", [rename_action("col-backlog", "Queued")]
 
     monkeypatch.setattr(main, "answer_chat", valid_update)
     response = client.post("/api/chat", json={"message": "Rename backlog"})
@@ -102,3 +108,74 @@ def test_chat_saves_a_valid_ai_board_update(tmp_path, monkeypatch):
     assert response.status_code == 200
     assert response.json()["board"]["columns"][0]["title"] == "Queued"
     assert client.get("/api/board").json()["columns"][0]["title"] == "Queued"
+
+
+def test_login_with_non_ascii_credentials_is_rejected(tmp_path, monkeypatch):
+    client = create_client(tmp_path, monkeypatch)
+    response = client.post(
+        "/api/auth/login", json={"username": "us\u00e9r", "password": "p\u00e4ss"}
+    )
+    assert response.status_code == 401
+
+
+def test_unknown_api_path_returns_404(tmp_path, monkeypatch):
+    client = create_client(tmp_path, monkeypatch)
+    assert client.get("/api/does-not-exist").status_code == 404
+
+
+def test_columns_cannot_be_added_removed_or_reordered(tmp_path, monkeypatch):
+    client = signed_in_client(tmp_path, monkeypatch)
+    original = client.get("/api/board").json()
+
+    replaced = {
+        **original,
+        "columns": [*original["columns"][:-1], {**original["columns"][-1], "id": "col-new"}],
+    }
+    reordered = {**original, "columns": original["columns"][::-1]}
+
+    assert client.put("/api/board", json=replaced).status_code == 400
+    assert client.put("/api/board", json=reordered).status_code == 400
+    assert client.get("/api/board").json() == original
+
+
+def test_chat_keeps_edits_made_while_ai_was_responding(tmp_path, monkeypatch):
+    client = signed_in_client(tmp_path, monkeypatch)
+
+    async def slow_update(board, chat_request):
+        edited = client.get("/api/board").json()
+        edited["cards"]["card-1"]["title"] = "Edited during chat"
+        assert client.put("/api/board", json=edited).status_code == 200
+        return "Renamed.", [rename_action("col-backlog", "Queued")]
+
+    monkeypatch.setattr(main, "answer_chat", slow_update)
+    response = client.post("/api/chat", json={"message": "Rename backlog"})
+
+    assert response.status_code == 200
+    saved = client.get("/api/board").json()
+    assert saved == response.json()["board"]
+    assert saved["columns"][0]["title"] == "Queued"
+    assert saved["cards"]["card-1"]["title"] == "Edited during chat"
+
+
+def test_chat_conflicting_with_a_concurrent_edit_saves_nothing(
+    tmp_path, monkeypatch
+):
+    client = signed_in_client(tmp_path, monkeypatch)
+
+    async def stale_update(board, chat_request):
+        edited = client.get("/api/board").json()
+        edited["columns"][0]["cardIds"].remove("card-1")
+        del edited["cards"]["card-1"]
+        assert client.put("/api/board", json=edited).status_code == 200
+        return "Updated.", [
+            rename_action("col-backlog", "Queued"),
+            {**rename_action(None, "Renamed"), "type": "update_card", "card_id": "card-1"},
+        ]
+
+    monkeypatch.setattr(main, "answer_chat", stale_update)
+    response = client.post("/api/chat", json={"message": "Rename card 1"})
+
+    assert response.status_code == 409
+    saved = client.get("/api/board").json()
+    assert saved["columns"][0]["title"] == "Backlog"
+    assert "card-1" not in saved["cards"]

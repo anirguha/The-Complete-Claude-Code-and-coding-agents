@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import clsx from "clsx";
@@ -43,10 +43,11 @@ export const KanbanCard = ({ card, onDelete, onEdit }: KanbanCardProps) => {
     >
       {editing ? (
         <form
-          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+          onSubmit={(event) => {
             event.preventDefault();
-            if (!title.trim()) return;
-            onEdit(card.id, title.trim(), details.trim());
+            const nextTitle = title.trim();
+            if (!nextTitle) return;
+            onEdit(card.id, nextTitle, details.trim());
             setEditing(false);
           }}
           className="space-y-3"
@@ -76,11 +77,7 @@ export const KanbanCard = ({ card, onDelete, onEdit }: KanbanCardProps) => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setTitle(card.title);
-                setDetails(card.details);
-                setEditing(false);
-              }}
+              onClick={() => setEditing(false)}
               className="rounded-full border border-[var(--stroke)] px-3 py-2 text-xs font-semibold"
             >
               Cancel
