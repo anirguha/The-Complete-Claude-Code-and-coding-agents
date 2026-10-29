@@ -39,6 +39,7 @@ The user runs a single Docker command (or a provided start script). A browser op
 - **Responsive but desktop-first**: optimized for wide screens, functional on tablet
 
 ### Color Scheme
+
 - Accent Yellow: `#ecad0a`
 - Blue Primary: `#209dd7`
 - Purple Secondary: `#753991` (submit buttons)
@@ -71,14 +72,14 @@ The user runs a single Docker command (or a provided start script). A browser op
 
 ### Why These Choices
 
-| Decision | Rationale |
-|---|---|
-| SSE over WebSockets | One-way push is all we need; simpler, no bidirectional complexity, universal browser support |
-| Static Next.js export | Single origin, no CORS issues, one port, one container, simple deployment |
-| SQLite over Postgres | No auth = no multi-user = no need for a database server; self-contained, zero config |
-| Single Docker container | Students run one command; no docker-compose for production, no service orchestration |
-| uv for Python | Fast, modern Python project management; reproducible lockfile; what students should learn |
-| Market orders only | Eliminates order book, limit order logic, partial fills — dramatically simpler portfolio math |
+| Decision                | Rationale                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| SSE over WebSockets     | One-way push is all we need; simpler, no bidirectional complexity, universal browser support  |
+| Static Next.js export   | Single origin, no CORS issues, one port, one container, simple deployment                     |
+| SQLite over Postgres    | No auth = no multi-user = no need for a database server; self-contained, zero config          |
+| Single Docker container | Students run one command; no docker-compose for production, no service orchestration          |
+| uv for Python           | Fast, modern Python project management; reproducible lockfile; what students should learn     |
+| Market orders only      | Eliminates order book, limit order logic, partial fills — dramatically simpler portfolio math |
 
 ---
 
@@ -196,11 +197,13 @@ The backend checks for the SQLite database on startup (or first request). If the
 All tables include a `user_id` column defaulting to `"default"`. This is hardcoded for now (single-user) but enables future multi-user support without schema migration.
 
 **users_profile** — User state (cash balance)
+
 - `id` TEXT PRIMARY KEY (default: `"default"`)
 - `cash_balance` REAL (default: `10000.0`)
 - `created_at` TEXT (ISO timestamp)
 
 **watchlist** — Tickers the user is watching
+
 - `id` TEXT PRIMARY KEY (UUID)
 - `user_id` TEXT (default: `"default"`)
 - `ticker` TEXT
@@ -208,6 +211,7 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 - UNIQUE constraint on `(user_id, ticker)`
 
 **positions** — Current holdings (one row per ticker per user)
+
 - `id` TEXT PRIMARY KEY (UUID)
 - `user_id` TEXT (default: `"default"`)
 - `ticker` TEXT
@@ -217,6 +221,7 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 - UNIQUE constraint on `(user_id, ticker)`
 
 **trades** — Trade history (append-only log)
+
 - `id` TEXT PRIMARY KEY (UUID)
 - `user_id` TEXT (default: `"default"`)
 - `ticker` TEXT
@@ -226,12 +231,14 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 - `executed_at` TEXT (ISO timestamp)
 
 **portfolio_snapshots** — Portfolio value over time (for P&L chart). Recorded every 30 seconds by a background task, and immediately after each trade execution.
+
 - `id` TEXT PRIMARY KEY (UUID)
 - `user_id` TEXT (default: `"default"`)
 - `total_value` REAL
 - `recorded_at` TEXT (ISO timestamp)
 
 **chat_messages** — Conversation history with LLM
+
 - `id` TEXT PRIMARY KEY (UUID)
 - `user_id` TEXT (default: `"default"`)
 - `role` TEXT (`"user"` or `"assistant"`)
@@ -249,33 +256,38 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 ## 8. API Endpoints
 
 ### Market Data
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/stream/prices` | SSE stream of live price updates |
+
+| Method | Path                 | Description                      |
+| ------ | -------------------- | -------------------------------- |
+| GET    | `/api/stream/prices` | SSE stream of live price updates |
 
 ### Portfolio
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/portfolio` | Current positions, cash balance, total value, unrealized P&L |
-| POST | `/api/portfolio/trade` | Execute a trade: `{ticker, quantity, side}` |
-| GET | `/api/portfolio/history` | Portfolio value snapshots over time (for P&L chart) |
+
+| Method | Path                     | Description                                                  |
+| ------ | ------------------------ | ------------------------------------------------------------ |
+| GET    | `/api/portfolio`         | Current positions, cash balance, total value, unrealized P&L |
+| POST   | `/api/portfolio/trade`   | Execute a trade: `{ticker, quantity, side}`                  |
+| GET    | `/api/portfolio/history` | Portfolio value snapshots over time (for P&L chart)          |
 
 ### Watchlist
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/watchlist` | Current watchlist tickers with latest prices |
-| POST | `/api/watchlist` | Add a ticker: `{ticker}` |
-| DELETE | `/api/watchlist/{ticker}` | Remove a ticker |
+
+| Method | Path                      | Description                                  |
+| ------ | ------------------------- | -------------------------------------------- |
+| GET    | `/api/watchlist`          | Current watchlist tickers with latest prices |
+| POST   | `/api/watchlist`          | Add a ticker: `{ticker}`                     |
+| DELETE | `/api/watchlist/{ticker}` | Remove a ticker                              |
 
 ### Chat
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/chat` | Send a message, receive complete JSON response (message + executed actions) |
+
+| Method | Path        | Description                                                                 |
+| ------ | ----------- | --------------------------------------------------------------------------- |
+| POST   | `/api/chat` | Send a message, receive complete JSON response (message + executed actions) |
 
 ### System
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/health` | Health check (for Docker/deployment) |
+
+| Method | Path          | Description                          |
+| ------ | ------------- | ------------------------------------ |
+| GET    | `/api/health` | Health check (for Docker/deployment) |
 
 ---
 
@@ -305,12 +317,8 @@ The LLM is instructed to respond with JSON matching this schema:
 ```json
 {
   "message": "Your conversational response to the user",
-  "trades": [
-    {"ticker": "AAPL", "side": "buy", "quantity": 10}
-  ],
-  "watchlist_changes": [
-    {"ticker": "PYPL", "action": "add"}
-  ]
+  "trades": [{ "ticker": "AAPL", "side": "buy", "quantity": 10 }],
+  "watchlist_changes": [{ "ticker": "PYPL", "action": "add" }]
 }
 ```
 
@@ -321,6 +329,7 @@ The LLM is instructed to respond with JSON matching this schema:
 ### Auto-Execution
 
 Trades specified by the LLM execute automatically — no confirmation dialog. This is a deliberate design choice:
+
 - It's a simulated environment with fake money, so the stakes are zero
 - It creates an impressive, fluid demo experience
 - It demonstrates agentic AI capabilities — the core theme of the course
@@ -330,6 +339,7 @@ If a trade fails validation (e.g., insufficient cash), the error is included in 
 ### System Prompt Guidance
 
 The LLM should be prompted as "FinAlly, an AI trading assistant" with instructions to:
+
 - Analyze portfolio composition, risk concentration, and P&L
 - Suggest trades with reasoning
 - Execute trades when the user asks or agrees
@@ -340,6 +350,7 @@ The LLM should be prompted as "FinAlly, an AI trading assistant" with instructio
 ### LLM Mock Mode
 
 When `LLM_MOCK=true`, the backend returns deterministic mock responses instead of calling OpenRouter. This enables:
+
 - Fast, free, reproducible E2E tests
 - Development without an API key
 - CI/CD pipelines
@@ -404,12 +415,14 @@ The `db/` directory in the project root maps to `/app/db` in the container. The 
 ### Start/Stop Scripts
 
 **`scripts/start_mac.sh`** (macOS/Linux):
+
 - Builds the Docker image if not already built (or if `--build` flag passed)
 - Runs the container with the volume mount, port mapping, and `.env` file
 - Prints the URL to access the app
 - Optionally opens the browser
 
 **`scripts/stop_mac.sh`** (macOS/Linux):
+
 - Stops and removes the running container
 - Does NOT remove the volume (data persists)
 
@@ -428,12 +441,14 @@ The container is designed to deploy to AWS App Runner, Render, or any container 
 ### Unit Tests (within `frontend/` and `backend/`)
 
 **Backend (pytest)**:
+
 - Market data: simulator generates valid prices, GBM math is correct, Massive API response parsing works, both implementations conform to the abstract interface
 - Portfolio: trade execution logic, P&L calculations, edge cases (selling more than owned, buying with insufficient cash, selling at a loss)
 - LLM: structured output parsing handles all valid schemas, graceful handling of malformed responses, trade validation within chat flow
 - API routes: correct status codes, response shapes, error handling
 
 **Frontend (React Testing Library or similar)**:
+
 - Component rendering with mock data
 - Price flash animation triggers correctly on price changes
 - Watchlist CRUD operations
@@ -447,6 +462,7 @@ The container is designed to deploy to AWS App Runner, Render, or any container 
 **Environment**: Tests run with `LLM_MOCK=true` by default for speed and determinism.
 
 **Key Scenarios**:
+
 - Fresh start: default watchlist appears, $10k balance shown, prices are streaming
 - Add and remove a ticker from the watchlist
 - Buy shares: cash decreases, position appears, portfolio updates
@@ -454,3 +470,62 @@ The container is designed to deploy to AWS App Runner, Render, or any container 
 - Portfolio visualization: heatmap renders with correct colors, P&L chart has data points
 - AI chat (mocked): send a message, receive a response, trade execution appears inline
 - SSE resilience: disconnect and verify reconnection
+
+---
+
+## 13. Review: Questions, Clarifications & Feedback
+
+_Added by doc review on 2026-10-29. Items are grouped by priority. Each item ends with a **suggested resolution**. Once a decision is made, fold it into the relevant section above and delete the item here._
+
+### A. Blocking: the plan and the repo disagree
+
+1. **Is market data actually done?** `CLAUDE.md` says the market data component is complete and points to `planning/MARKET_DATA_SUMMARY.md`. But this project directory has no `backend/` folder: the working tree contains only `CLAUDE.md`, `planning/` and `.claude/`. Agents reading the summary will assume `backend/app/market/` exists and try to import from it. **Suggested:** Either restore the market data code, or mark it in `CLAUDE.md` as "to be rebuilt per `MARKET_DATA_SUMMARY.md`" so the summary is read as a design reference rather than as existing code.
+2. **The `cerebras-inference` skill is missing.** Section 9 tells agents to use the "cerebras-inference skill", but `.claude/skills/` doesn't contain it (`.claude/skills/cerebras/SKILL.md` shows as deleted in git). **Suggested:** Restore the skill, or inline the essentials here: the LiteLLM call, the model string `openrouter/openai/gpt-oss-120b`, the provider-routing parameter that pins Cerebras, and how to pass a JSON schema for structured output.
+3. **Node 20 is past end-of-life.** Node 20 reached EOL in April 2026. **Suggested:** Use Node 22 LTS (or 24) in the Dockerfile's first stage.
+
+### B. Underspecified behavior. Agents will guess differently, so decide now.
+
+4. **Which tickers get prices: the watchlist only, or the watchlist plus held positions?** If a user removes AAPL from the watchlist while holding AAPL, the portfolio can no longer be valued. **Suggested:** Tracked tickers = watchlist ∪ tickers with open positions. Removing a ticker from the watchlist stops its price feed only when there's no position in it.
+5. **Adding an unknown ticker.** What seed price, drift and volatility does the simulator use for something like `PYPL` or `ZZZZ`? Are bogus symbols rejected? In Massive mode, what happens when a symbol is invalid? **Suggested:** The simulator accepts any 1–5 letter symbol and gives unknown tickers a random seed price between $50 and $300 with default GBM parameters. Massive mode rejects a ticker that returns no data. Always normalize tickers to uppercase.
+6. **Trading a ticker that has no price yet** (for example, one added a moment ago in Massive mode). **Suggested:** Reject with a 400 and a "no price available" error. Also decide whether trading a ticker that isn't on the watchlist auto-adds it. Recommend yes.
+7. **"Daily change %"** (Section 10). There's no daily open in the simulator, and the SSE payload carries only the previous tick. **Suggested:** Define it as change since session start, measured from the first price the client receives or the seed price, and label it that way. This also removes any need for an open-price API call in Massive mode.
+8. **Quantity and money precision.** Fractional shares are allowed, but nothing defines a minimum quantity, the decimal precision, or whether `quantity <= 0` is rejected. Storing money as floating-point `REAL` will drift. **Suggested:** Require `quantity > 0`, round quantity to 4 decimal places, round cash and prices to 2 decimals at write time, and treat a position whose quantity is within 1e-6 of zero as closed.
+9. **Closing a position.** **Suggested:** Delete the `positions` row when quantity reaches 0, matching "position disappears". Selling leaves `avg_cost` unchanged. Realized P&L is not tracked; confirm that's acceptable, since the trades log is enough to derive it later.
+10. **Schema inconsistency.** The plan says "all tables include a `user_id` column", but `users_profile` uses `id` as its user key. **Suggested:** Either say explicitly that `users_profile.id` is the user id, or rename the column to `user_id`.
+11. **What the chat endpoint returns.** Section 9 defines the LLM's schema but not the HTTP response the frontend receives. **Suggested:**
+    ```json
+    {
+      "message": "...",
+      "trades": [{ "ticker": "AAPL", "side": "buy", "quantity": 10, "status": "executed", "price": 191.2, "error": null }],
+      "watchlist_changes": [{ "ticker": "PYPL", "action": "add", "status": "applied", "error": null }]
+    }
+    ```
+    Execute each action independently, not atomically. A failed action records its `error` and doesn't block the others.
+12. **Who reports a failed trade.** The plan says trade errors are "included in the chat response so the LLM can inform the user", but the LLM has already responded by the time trades execute. Telling the user would need a second LLM call. **Suggested:** Skip the second call. The frontend renders failed actions inline, for example "❌ Buy 10 TSLA failed: insufficient cash", next to the LLM's message.
+13. **LLM failure modes.** Nothing covers malformed JSON, a timeout, or a missing or invalid API key. **Suggested:** On any failure, return HTTP 200 with a friendly `message` and empty action arrays, log the error, and still store the user's message. Set a 30s timeout.
+14. **How much conversation history is sent.** **Suggested:** The last 20 messages.
+15. **What mock mode returns.** E2E tests need specific, documented behavior. **Suggested:** Pattern-match the user's text. `buy N TICKER` returns that trade, `add TICKER` returns that watchlist change, and anything else returns a fixed message with no actions.
+16. **Header total value "updating live."** Is it recomputed on the client from SSE prices × positions, or polled from `/api/portfolio`? **Suggested:** Compute it on the client from the latest SSE prices and the last fetched positions. Refetch `/api/portfolio` after every manual trade and after every chat response that contains actions.
+17. **SSE payload shape.** **Suggested:** Pin it here. One `data:` event per tick containing a JSON object keyed by ticker, `{ "AAPL": { "ticker", "price", "previous_price", "timestamp", "change", "direction" }, ... }`, which matches the `PriceUpdate` model in `MARKET_DATA_SUMMARY.md`.
+18. **Main chart history.** With no history endpoint, a freshly clicked ticker shows only the ticks received since page load. Is that acceptable? **Suggested:** Yes, for simplicity. Optionally, the backend could keep a small in-memory ring buffer of the last ~500 ticks per ticker and serve it from `GET /api/prices/{ticker}/history`. Treat that as a stretch goal.
+19. **`OPENROUTER_API_KEY` is labeled "Required"** but isn't needed when `LLM_MOCK=true`. **Suggested:** The app must start and run without the key. Chat returns a "LLM not configured" message unless mock mode is on.
+20. **Database path.** **Suggested:** Make it configurable with a `DB_PATH` env var (default `db/finally.db`) so tests can use a temporary file. Enable SQLite WAL mode and run each trade (cash update + position upsert + trade insert + snapshot) in a single transaction.
+21. **Snapshot growth.** Recording every 30s produces about 2,900 rows per day, without limit. **Suggested:** That's fine for a demo. Have `/api/portfolio/history` return at most the last ~500 points, or downsample.
+22. **Static serving order.** **Suggested:** Register every `/api/*` route before mounting `StaticFiles(directory="static", html=True)` at `/`. Otherwise the catch-all mount shadows the API routes.
+
+### C. Opportunities to simplify
+
+23. **One charting approach, not three.** "Lightweight Charts or Recharts" is left open. Recharts is SVG-based, not canvas, so it contradicts "canvas-based preferred". **Suggested:** Use Lightweight Charts for the main chart and the P&L chart. Draw sparklines as hand-rolled inline SVG polylines, which needs no library. Build the heatmap with a small squarify function plus absolutely positioned divs, also no library.
+24. **Drop prices from `GET /api/watchlist`.** The frontend already receives every price over SSE. **Suggested:** Have it return just the list of tickers.
+25. **Use natural keys.** UUID primary keys on `watchlist` and `positions` add nothing, since `(user_id, ticker)` is already unique. **Suggested:** Make `(user_id, ticker)` the primary key there. Keep UUIDs only on the append-only tables (`trades`, `portfolio_snapshots`, `chat_messages`).
+26. **Drop `docker-compose.yml`** (listed as an optional convenience). The start scripts already cover it, and it's one more file to keep in sync.
+27. **Simplify E2E infrastructure.** A separate Playwright container plus a compose file is the heaviest part of the testing plan. **Suggested:** Run Playwright from the host (`npx playwright test`) against the app container started with `LLM_MOCK=true`. Also cut the "SSE resilience" scenario: it's flaky to automate and mostly exercises `EventSource`'s built-in retry. Cover reconnection with a frontend unit test of the status-dot logic instead.
+28. **Trim the frontend unit test list** to the logic that's easy to get wrong: P&L and portfolio math, the price-flash trigger, and parsing the chat action rendering. Leave rendering checks to E2E.
+29. **Defer Massive.** It's optional and the simulator is the default. **Suggested:** Mark Massive mode as "best effort / not covered by E2E" so agents don't sink time into it.
+30. **Lazy DB initialization.** Doing it "on startup (or first request)" leaves two code paths. **Suggested:** Initialize once in FastAPI's lifespan handler.
+
+### D. Minor wording and consistency
+
+31. Section 4 lists `backend/db/` for schema and seed code and top-level `db/` for the runtime file. The shared name is confusing. **Suggested:** Rename the code location to `backend/app/db/`, which also matches the `backend/app/market/` layout described in the summary.
+32. Section 6 says the SSE stream pushes "all tickers known to the system". Once item 4 is decided, replace this with the exact rule.
+33. Section 11 says to "optionally open the browser" from the start script. **Suggested:** Open it by default on macOS (`open`), with a `--no-open` flag to skip.

@@ -1,3 +1,9 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Status
+
 # FinAlly Project - the Finance Ally
 
 All project documentation is in the `planning` directory.

@@ -23,16 +23,16 @@ MarketDataSource (ABC)
 
 ### Modules
 
-| File | Purpose |
-|------|---------|
-| `models.py` | `PriceUpdate` — immutable frozen dataclass (ticker, price, previous_price, timestamp, change, direction) |
-| `interface.py` | `MarketDataSource` — abstract base class defining `start/stop/add_ticker/remove_ticker/get_tickers` |
-| `cache.py` | `PriceCache` — thread-safe price store with version counter for SSE change detection |
-| `seed_prices.py` | Realistic seed prices, per-ticker GBM params (drift/volatility), correlation groups |
-| `simulator.py` | `GBMSimulator` (Geometric Brownian Motion with Cholesky-correlated moves) + `SimulatorDataSource` |
-| `massive_client.py` | `MassiveDataSource` — REST polling client for Polygon.io via the `massive` package |
-| `factory.py` | `create_market_data_source()` — selects simulator or Massive based on `MASSIVE_API_KEY` env var |
-| `stream.py` | `create_stream_router()` — FastAPI SSE endpoint factory using version-based change detection |
+| File                | Purpose                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `models.py`         | `PriceUpdate` — immutable frozen dataclass (ticker, price, previous_price, timestamp, change, direction) |
+| `interface.py`      | `MarketDataSource` — abstract base class defining `start/stop/add_ticker/remove_ticker/get_tickers`      |
+| `cache.py`          | `PriceCache` — thread-safe price store with version counter for SSE change detection                     |
+| `seed_prices.py`    | Realistic seed prices, per-ticker GBM params (drift/volatility), correlation groups                      |
+| `simulator.py`      | `GBMSimulator` (Geometric Brownian Motion with Cholesky-correlated moves) + `SimulatorDataSource`        |
+| `massive_client.py` | `MassiveDataSource` — REST polling client for Polygon.io via the `massive` package                       |
+| `factory.py`        | `create_market_data_source()` — selects simulator or Massive based on `MASSIVE_API_KEY` env var          |
+| `stream.py`         | `create_stream_router()` — FastAPI SSE endpoint factory using version-based change detection             |
 
 ### Key Design Decisions
 
@@ -46,14 +46,14 @@ MarketDataSource (ABC)
 
 **73 tests, all passing.** 6 test modules in `backend/tests/market/`.
 
-| Module | Tests | Coverage |
-|--------|-------|----------|
-| test_models.py | 11 | models.py: 100% |
-| test_cache.py | 13 | cache.py: 100% |
-| test_simulator.py | 17 | simulator.py: 98% |
-| test_simulator_source.py | 10 | (integration tests) |
-| test_factory.py | 7 | factory.py: 100% |
-| test_massive.py | 13 | massive_client.py: 56% (expected — API methods mocked) |
+| Module                   | Tests | Coverage                                               |
+| ------------------------ | ----- | ------------------------------------------------------ |
+| test_models.py           | 11    | models.py: 100%                                        |
+| test_cache.py            | 13    | cache.py: 100%                                         |
+| test_simulator.py        | 17    | simulator.py: 98%                                      |
+| test_simulator_source.py | 10    | (integration tests)                                    |
+| test_factory.py          | 7     | factory.py: 100%                                       |
+| test_massive.py          | 13    | massive_client.py: 56% (expected — API methods mocked) |
 
 Overall coverage: 84%.
 
