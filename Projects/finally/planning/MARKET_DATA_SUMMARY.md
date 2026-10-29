@@ -1,6 +1,6 @@
 # Market Data Backend — Summary
 
-**Status:** Complete, tested, reviewed, all issues resolved.
+**Status:** Design reference only — to be rebuilt. This code does not exist in this project. The summary below describes an earlier build; use it as the design to rebuild from, and do not import from or copy any old copy of it.
 
 ## What Was Built
 

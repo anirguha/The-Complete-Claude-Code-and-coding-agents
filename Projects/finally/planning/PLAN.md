@@ -293,7 +293,7 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 
 ## 9. LLM Integration
 
-When writing code to make calls to LLMs, use cerebras-inference skill to use LiteLLM via OpenRouter to the `openrouter/openai/gpt-oss-120b` model with Cerebras as the inference provider. Structured Outputs should be used to interpret the results.
+When writing code to make calls to LLMs, use the `cerebras` skill (`.claude/skills/cerebras/`) to use LiteLLM via OpenRouter to the `openrouter/openai/gpt-oss-120b` model with Cerebras as the inference provider. Structured Outputs should be used to interpret the results.
 
 There is an OPENROUTER_API_KEY in the .env file in the project root.
 
@@ -304,7 +304,7 @@ When the user sends a chat message, the backend:
 1. Loads the user's current portfolio context (cash, positions with P&L, watchlist with live prices, total portfolio value)
 2. Loads recent conversation history from the `chat_messages` table
 3. Constructs a prompt with a system message, portfolio context, conversation history, and the user's new message
-4. Calls the LLM via LiteLLM → OpenRouter, requesting structured output, using the cerebras-inference skill
+4. Calls the LLM via LiteLLM → OpenRouter, requesting structured output, using the `cerebras` skill
 5. Parses the complete structured JSON response
 6. Auto-executes any trades or watchlist changes specified in the response
 7. Stores the message and executed actions in `chat_messages`
@@ -479,8 +479,8 @@ _Added by doc review on 2026-10-29. Items are grouped by priority. Each item end
 
 ### A. Blocking: the plan and the repo disagree
 
-1. **Is market data actually done?** `CLAUDE.md` says the market data component is complete and points to `planning/MARKET_DATA_SUMMARY.md`. But this project directory has no `backend/` folder: the working tree contains only `CLAUDE.md`, `planning/` and `.claude/`. Agents reading the summary will assume `backend/app/market/` exists and try to import from it. **Suggested:** Either restore the market data code, or mark it in `CLAUDE.md` as "to be rebuilt per `MARKET_DATA_SUMMARY.md`" so the summary is read as a design reference rather than as existing code.
-2. **The `cerebras-inference` skill is missing.** Section 9 tells agents to use the "cerebras-inference skill", but `.claude/skills/` doesn't contain it (`.claude/skills/cerebras/SKILL.md` shows as deleted in git). **Suggested:** Restore the skill, or inline the essentials here: the LiteLLM call, the model string `openrouter/openai/gpt-oss-120b`, the provider-routing parameter that pins Cerebras, and how to pass a JSON schema for structured output.
+1. ~~**Is market data actually done?**~~ Resolved 2026-10-30: market data is to be rebuilt from scratch. `CLAUDE.md` and `MARKET_DATA_SUMMARY.md` now mark the summary as a design reference only, and `CLAUDE.md` forbids using the old copies at root `finally/` and `prelegal/finally/`.
+2. ~~**The `cerebras-inference` skill is missing.**~~ Resolved 2026-10-30: the skill exists at `.claude/skills/cerebras/SKILL.md` under the name `cerebras`, and Section 9 now uses that name.
 3. **Node 20 is past end-of-life.** Node 20 reached EOL in April 2026. **Suggested:** Use Node 22 LTS (or 24) in the Dockerfile's first stage.
 
 ### B. Underspecified behavior. Agents will guess differently, so decide now.
