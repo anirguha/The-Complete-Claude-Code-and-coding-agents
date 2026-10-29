@@ -39,6 +39,8 @@ const request = async <T>(
   return (await response.json()) as T;
 };
 
+type User = { username: string };
+
 export type ChatTurn = {
   role: "user" | "assistant";
   content: string;
@@ -50,16 +52,13 @@ export type ChatResult = {
 };
 
 export const api = {
-  currentUser: () => request<{ username: string }>("/auth/me"),
+  currentUser: () => request<User>("/auth/me"),
   login: (username: string, password: string) =>
-    request<{ username: string }>("/auth/login", {
+    request<User>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
-  logout: () =>
-    request<void>("/auth/logout", {
-      method: "POST",
-    }),
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
   getBoard: () => request<BoardData>("/board"),
   saveBoard: (board: BoardData) =>
     request<BoardData>("/board", {

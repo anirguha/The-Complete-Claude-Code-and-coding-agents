@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app import database
-from app.main import app
+from app import database, main
 
 
 def rename_action(column_id, title):
@@ -18,7 +17,7 @@ def rename_action(column_id, title):
 def create_client(tmp_path, monkeypatch):
     monkeypatch.setattr(database, "DATABASE_PATH", tmp_path / "kanban.db")
     database.initialize_database()
-    return TestClient(app)
+    return TestClient(main.app)
 
 
 def signed_in_client(tmp_path, monkeypatch):
@@ -78,7 +77,7 @@ def test_database_supports_same_card_ids_on_different_users(
     first = database.load_board("user")
     second = database.load_board("another-user")
     second.columns[0].title = "Separate board"
-    database.save_board("another-user", second)
+    database.update_board("another-user", lambda _: second)
 
     assert first.cards.keys() == second.cards.keys()
     assert database.load_board("user").columns[0].title == "Backlog"
@@ -98,8 +97,6 @@ def test_chat_provider_failure_keeps_board_unchanged(
 
 
 def test_chat_saves_a_valid_ai_board_update(tmp_path, monkeypatch):
-    from app import main
-
     client = signed_in_client(tmp_path, monkeypatch)
 
     async def valid_update(board, chat_request):
@@ -142,8 +139,6 @@ def test_columns_cannot_be_added_removed_or_reordered(tmp_path, monkeypatch):
 
 
 def test_chat_keeps_edits_made_while_ai_was_responding(tmp_path, monkeypatch):
-    from app import main
-
     client = signed_in_client(tmp_path, monkeypatch)
 
     async def slow_update(board, chat_request):
@@ -165,8 +160,6 @@ def test_chat_keeps_edits_made_while_ai_was_responding(tmp_path, monkeypatch):
 def test_chat_conflicting_with_a_concurrent_edit_saves_nothing(
     tmp_path, monkeypatch
 ):
-    from app import main
-
     client = signed_in_client(tmp_path, monkeypatch)
 
     async def stale_update(board, chat_request):

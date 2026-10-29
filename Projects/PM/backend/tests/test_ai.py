@@ -21,7 +21,6 @@ class FakeResponse:
         return {"choices": [{"message": {"content": self.content}}]}
 
 
-
 class FakeClient:
     def __init__(self, content=None, error=None):
         self.content = content
@@ -39,6 +38,11 @@ class FakeClient:
         if self.error:
             raise self.error
         return FakeResponse(self.content)
+
+
+def use_fake_client(monkeypatch, fake_client):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
 
 
 def action(kind, **fields):
@@ -65,8 +69,7 @@ async def test_sends_board_history_and_applies_structured_actions(monkeypatch):
             }
         )
     )
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
+    use_fake_client(monkeypatch, fake_client)
     history = [{"role": "assistant", "content": "Prior answer"}]
 
     reply, actions = await ai.answer_chat(
@@ -113,8 +116,7 @@ async def test_invalid_ai_action_is_rejected_without_changes(monkeypatch):
             }
         )
     )
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
+    use_fake_client(monkeypatch, fake_client)
 
     with pytest.raises(HTTPException, match="No board changes were saved"):
         await ai.answer_chat(DEFAULT_BOARD, ChatRequest(message="Delete a card"))
@@ -123,8 +125,7 @@ async def test_invalid_ai_action_is_rejected_without_changes(monkeypatch):
 @pytest.mark.asyncio
 async def test_malformed_ai_response_is_rejected(monkeypatch):
     fake_client = FakeClient("not json")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
+    use_fake_client(monkeypatch, fake_client)
 
     with pytest.raises(HTTPException, match="invalid response"):
         await ai.answer_chat(DEFAULT_BOARD, ChatRequest(message="Hello"))
@@ -138,8 +139,7 @@ async def test_provider_http_error_is_surfaced(monkeypatch):
         "rate limited", request=request, response=response
     )
     fake_client = FakeClient(error=error)
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
+    use_fake_client(monkeypatch, fake_client)
 
     with pytest.raises(HTTPException, match="HTTP 429"):
         await ai.answer_chat(DEFAULT_BOARD, ChatRequest(message="Hello"))
@@ -149,8 +149,7 @@ async def test_provider_http_error_is_surfaced(monkeypatch):
 async def test_provider_connection_error_is_surfaced(monkeypatch):
     request = httpx.Request("POST", ai.OPENROUTER_URL)
     fake_client = FakeClient(error=httpx.ConnectError("offline", request=request))
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
-    monkeypatch.setattr(ai.httpx, "AsyncClient", lambda timeout: fake_client)
+    use_fake_client(monkeypatch, fake_client)
 
     with pytest.raises(HTTPException, match="Could not connect"):
         await ai.answer_chat(DEFAULT_BOARD, ChatRequest(message="Hello"))

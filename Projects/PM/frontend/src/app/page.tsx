@@ -9,6 +9,9 @@ import type { BoardData } from "@/lib/kanban";
 
 type UserState = "loading" | "signed-out" | "signed-in" | "error";
 
+const errorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export default function Home() {
   const [userState, setUserState] = useState<UserState>("loading");
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -41,11 +44,7 @@ export default function Home() {
         ) {
           setUserState("signed-out");
         } else {
-          setError(
-            requestError instanceof Error
-              ? requestError.message
-              : "Could not connect to the server."
-          );
+          setError(errorMessage(requestError, "Could not connect to the server."));
           setUserState("error");
         }
       });
@@ -61,9 +60,7 @@ export default function Home() {
       await api.login(username, password);
       await loadBoard();
     } catch (requestError) {
-      setError(
-        requestError instanceof Error ? requestError.message : "Sign in failed."
-      );
+      setError(errorMessage(requestError, "Sign in failed."));
     } finally {
       setBusy(false);
     }
@@ -77,9 +74,7 @@ export default function Home() {
       setBoard(null);
       setUserState("signed-out");
     } catch (requestError) {
-      setError(
-        requestError instanceof Error ? requestError.message : "Sign out failed."
-      );
+      setError(errorMessage(requestError, "Sign out failed."));
     }
   };
 
@@ -91,11 +86,7 @@ export default function Home() {
         setError("");
       })
       .catch(async (requestError: unknown) => {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Could not save the board."
-        );
+        setError(errorMessage(requestError, "Could not save the board."));
         try {
           await loadBoard();
         } catch (reloadError) {
@@ -111,15 +102,11 @@ export default function Home() {
   // The server applies AI changes to the latest saved board, so reload it once
   // any pending saves have finished instead of using the chat response board.
   const handleAIBoardUpdate = () => {
-    saveQueue.current = saveQueue.current.then(loadBoard).catch(
-      (requestError: unknown) => {
-        setError(
-          requestError instanceof Error
-            ? requestError.message
-            : "Could not reload the board."
-        );
-      }
-    );
+    saveQueue.current = saveQueue.current
+      .then(loadBoard)
+      .catch((requestError: unknown) => {
+        setError(errorMessage(requestError, "Could not reload the board."));
+      });
   };
 
   if (userState === "loading") {

@@ -1,9 +1,9 @@
-from contextlib import asynccontextmanager
 import hmac
 import os
 import secrets
-from pathlib import Path
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +13,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.ai import answer_chat, apply_actions
 from app.database import initialize_database, load_board, update_board
 from app.models import Board, ChatRequest, ChatResponse, Credentials
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -70,23 +71,19 @@ def current_user(user_id: str = Depends(authenticated_user)) -> dict[str, str]:
     return {"username": user_id}
 
 
-@app.post("/api/auth/logout")
-def logout(
-    request: Request, user_id: str = Depends(authenticated_user)
-) -> Response:
+@app.post("/api/auth/logout", dependencies=[Depends(authenticated_user)])
+def logout(request: Request) -> Response:
     request.session.clear()
     return Response(status_code=204)
 
 
-@app.get("/api/board", response_model=Board)
+@app.get("/api/board")
 def get_board(user_id: str = Depends(authenticated_user)) -> Board:
     return load_board(user_id)
 
 
-@app.put("/api/board", response_model=Board)
-def put_board(
-    board: Board, user_id: str = Depends(authenticated_user)
-) -> Board:
+@app.put("/api/board")
+def put_board(board: Board, user_id: str = Depends(authenticated_user)) -> Board:
     def replace(current: Board) -> Board:
         if [c.id for c in board.columns] != [c.id for c in current.columns]:
             raise HTTPException(
@@ -97,7 +94,7 @@ def put_board(
     return update_board(user_id, replace)
 
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/api/chat")
 async def chat(
     chat_request: ChatRequest,
     user_id: str = Depends(authenticated_user),

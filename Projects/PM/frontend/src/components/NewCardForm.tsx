@@ -12,10 +12,9 @@ export const NewCardForm = ({ onAdd }: NewCardFormProps) => {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!formState.title.trim()) {
-      return;
-    }
-    onAdd(formState.title.trim(), formState.details.trim());
+    const title = formState.title.trim();
+    if (!title) return;
+    onAdd(title, formState.details.trim());
     setFormState(initialFormState);
     setIsOpen(false);
   };

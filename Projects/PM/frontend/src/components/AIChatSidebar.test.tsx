@@ -10,6 +10,9 @@ vi.mock("@/lib/api", () => ({
   },
 }));
 
+const getInput = () =>
+  screen.getByRole("textbox", { name: "Message the board assistant" });
+
 describe("AIChatSidebar", () => {
   it("sends on Enter and keeps Shift+Enter for new lines", async () => {
     vi.mocked(api.chat).mockResolvedValue({
@@ -17,9 +20,7 @@ describe("AIChatSidebar", () => {
       board: initialData,
     });
     render(<AIChatSidebar onBoardUpdated={vi.fn()} />);
-    const input = screen.getByRole("textbox", {
-      name: "Message the board assistant",
-    });
+    const input = getInput();
 
     await userEvent.type(input, "line one{Shift>}{Enter}{/Shift}line two");
     expect(api.chat).not.toHaveBeenCalled();
@@ -37,10 +38,7 @@ describe("AIChatSidebar", () => {
     });
     render(<AIChatSidebar onBoardUpdated={onBoardUpdated} />);
 
-    await userEvent.type(
-      screen.getByRole("textbox", { name: "Message the board assistant" }),
-      "Rename backlog to queued"
-    );
+    await userEvent.type(getInput(), "Rename backlog to queued");
     await userEvent.click(screen.getByRole("button", { name: "Send message" }));
 
     expect(await screen.findByText("I renamed the column.")).toBeInTheDocument();
@@ -51,9 +49,7 @@ describe("AIChatSidebar", () => {
   it("shows chat errors and restores the message draft", async () => {
     vi.mocked(api.chat).mockRejectedValue(new Error("AI provider unavailable."));
     render(<AIChatSidebar onBoardUpdated={vi.fn()} />);
-    const input = screen.getByRole("textbox", {
-      name: "Message the board assistant",
-    });
+    const input = getInput();
     await userEvent.type(input, "Summarize the board");
     await userEvent.click(screen.getByRole("button", { name: "Send message" }));
 
