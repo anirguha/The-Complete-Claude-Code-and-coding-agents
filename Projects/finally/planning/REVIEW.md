@@ -97,3 +97,67 @@ What changed since the 2026-10-29 review: two local commits. `3d54958` added the
 2. **N2:** add the "don't use root `finally/`" guard to CLAUDE.md. Then prior #3, #5 and #7, which are one-line doc fixes.
 3. **N8:** settle §13 in one pass. Fold in prior #4, #6, #11 and #12, plus N3 (API contract) and N6 (DB path).
 4. **N4:** write the build plan and agent definitions, then start the backend agent.
+
+---
+
+## Third pass (2026-10-30)
+
+_Reviewer agent. Same scope as above. Secrets are referred to by key name only._
+
+### What changed since the second pass
+
+- **Git history only. No content changed.** The two local commits (`3d54958`, `081c577`) were reset and recommitted as `8222874` (docs, root `.gitignore`, root `finally/` copy) and `c47e50a` (the second-pass REVIEW.md). Both are **pushed**: `main` == `origin/main`, and the working tree is clean.
+- `.env` is in **no reachable commit** on any local or remote branch (`git log --all -- .env` is empty). The root `.env` still exists on disk and is ignored. Its key names are unchanged.
+- `CLAUDE.md`, `PLAN.md`, `MARKET_DATA_SUMMARY.md`, `archive/` and `.claude/` are byte-identical to what the second pass reviewed. No file under `Projects/finally/` is newer than the second-pass REVIEW.md. There is still no `backend/`, `frontend/`, `db/`, `scripts/`, `test/` or `.gitignore` in the project.
+- `Projects/finally/Finally.code-workspace` was removed in `8222874`. That's harmless.
+
+### Status of all prior findings
+
+| # | Status | Note (only where something changed or matters) |
+|---|--------|------|
+| 1 | Partial | Unchanged. The root `.gitignore` covers `.env` but not `node_modules/`, `.next/`, `out/`, `*.db` or `static/`. |
+| 2 | Open | |
+| 3 | Open | PLAN.md lines 296 and 307 still say `cerebras-inference`. §13 A2 is still wrong. |
+| 4 | Open | |
+| 5 | Open | |
+| 6 | Open | |
+| 7 | Open | |
+| 8 | Open | |
+| 9 | Open (low) | |
+| 10 | Open | |
+| 11 | Open | |
+| 12 | Open | |
+| 13 | Open | |
+| 14 | Open | |
+| 15 | Open | |
+| 16 | Open | |
+| 17 | Open | |
+| 18 | Open | |
+| N1 | **Resolved** | History was rewritten before pushing, and the pushed history has no `.env`, so no key needs rotating. The only remaining copy is in the local reflog (see T2). |
+| N2 | Open, **worse** | The root `finally/` copy (39 files, including working `backend/app/market/*`) is now on `origin/main`. A second full copy also exists at `prelegal/finally/` (39 files, from before this work). CLAUDE.md still has no "do not import from these" guard. |
+| N3 | Open | |
+| N4 | Open | |
+| N5 | Open | |
+| N6 | Open | |
+| N7 | Open | |
+| N8 | Open | |
+| N9 | Open | |
+| N10 | Open | |
+| N11 | Open | |
+
+**Totals (29 items): 1 resolved (N1), 1 partial (#1), 27 open.**
+
+### New findings
+
+#### High
+- **T1. Two decoy implementations are now published, and the plan points agents at them.** This builds on N2. `MARKET_DATA_SUMMARY.md` says the code is "Complete, tested" at `backend/app/market/`. In Python files, `git grep PriceCache` now returns hits only in `finally/backend/...` and `prelegal/finally/backend/...`, both on `origin/main`. Any agent that runs a code search, or any fresh clone, will find them. **Fix:** add the guard line to CLAUDE.md now ("Build from scratch in `Projects/finally/`. Never import from, copy from or consult root `finally/` or `prelegal/finally/`."). Reword the summary's status as "design reference, to be rebuilt" (prior #5). Optionally delete or archive the root `finally/` copy in a normal commit.
+
+#### Low
+- **T2. The local reflog still references `3d54958`, which contains the `.env` blob.** It can't leak through a normal push, and it expires on its own (after 90 days by default). To remove it now, the owner can run `git reflog expire --expire=now --all && git gc --prune=now`. That's optional, and the owner's call.
+- **T3. Parts of the second-pass text are now stale.** The header ("two local commits… not pushed") and N1's "the next `git push` will publish" are out of date. This section supersedes them. Trim them when you next edit this file.
+- **T4. The stale remote branch `origin/fix/code-review-high-medium`** still has the old `Projects/finally/backend/` layout (24 backend files). It's already merged into `main`, so delete it on GitHub to keep anyone from checking out the old tree.
+
+### Suggested order of action (updated)
+1. **T1/N2:** add the CLAUDE.md guard. Fix prior #3, #5 and #7 (one-line doc fixes).
+2. **N8:** settle PLAN §13 in one batch, folding in N3 (API contract) and N6 (DB path).
+3. **N4:** write the build plan and agent definitions, then start the backend agent. Add `Projects/finally/.gitignore` (N11) in that agent's first commit.
