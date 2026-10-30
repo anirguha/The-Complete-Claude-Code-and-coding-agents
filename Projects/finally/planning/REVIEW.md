@@ -1,163 +1,267 @@
-# FinAlly — Project Review
+# FinAlly Specification Review
 
-_Reviewer agent, 2026-10-30. Scope: everything in `Projects/finally/` (CLAUDE.md, `planning/`, `.claude/`), plus repo-level git state that affects it. There is still no application code. The root-level `finally/` folder and git history are not authoritative: the project is being rebuilt from scratch here. Items already listed in PLAN.md §13 are not repeated unless this review adds something new._
+The plan establishes a coherent demo scope, but several accounting, market-data, and API decisions still allow materially different implementations. Section 13 identifies many of these gaps accurately; its proposed resolutions need the changes below before becoming the build contract.
 
-Severity: **Critical** = could leak secrets or lose work now. **High** = agents will build the wrong thing or fail to build. **Medium** = inconsistency or guesswork risk. **Low** = cleanup.
+This review evaluates the specification and supporting design documents only. The absence of application code is expected.
 
-What changed since the 2026-10-29 review: two local commits. `3d54958` added the planning docs and REVIEW.md, and also committed the root `.env` and the old root `finally/` copy. `081c577` added a root `.gitignore` (which ignores `.env`) and removed `.env` from the tree. Nothing in `CLAUDE.md`, `planning/PLAN.md`, `planning/MARKET_DATA_SUMMARY.md`, `planning/archive/` or `.claude/` changed after the previous review was written.
+## High-severity findings
 
----
+### 1. Monetary rounding can create inconsistent trades
 
-## Status of prior findings (2026-10-29)
+**Severity:** High  
+**Sections:** 7, 8, 9; Section 13 item 8
 
-| # | Finding | Status | Notes |
-|---|---------|--------|-------|
-| 1 | `.env` untracked and not git-ignored | **Partial** | The root `.gitignore` now ignores `.env` (verified with `git check-ignore`). But `Projects/finally/.gitignore` was not restored, and the root file is a Python template: it does **not** ignore `node_modules/`, `.next/`, `out/`, `*.db` or `static/`. The `.env` was also committed before being ignored (see N1). |
-| 2 | `.env` in the wrong place, holds unrelated credentials | Open | It is still at the git root, still holds the Atlassian and Confluence keys, and still has no `LLM_MOCK`. There is no `Projects/finally/.env` and no `.env.example`. |
-| 3 | §9 names the `cerebras-inference` skill, which is actually `cerebras`. §13 A2 is wrong | Open | PLAN lines 296 and 307 still say `cerebras-inference`. A2 still claims the skill is deleted. |
-| 4 | The cerebras skill uses blocking `completion`, has no timeout, allows silent provider fallback, and has non-strict schemas | Open | SKILL.md unchanged. |
-| 5 | `MARKET_DATA_SUMMARY.md` describes non-existent code in the past tense | Open | Still says "Complete, tested… 73 tests". |
-| 6 | The archived design contradicts the summary (lazy `massive` import, `DEFAULT_CORR`, `-> None`) | Open | The archive is unchanged (e.g. `DEFAULT_CORR` at MARKET_DATA_DESIGN.md:342 and the lazy import at :680). |
-| 7 | The reviewer agent is told to write PLAN.md | Open | `.claude/agents/reviewer.md` is unchanged, typos included. This run again left PLAN.md untouched. |
-| 8 | Two competing review workflows; "feedbackto" typo | Open | |
-| 9 | `.claude/settings.json` deleted | Open, low impact | The old file only enabled 3 plugins (frontend-design, context7, playwright), so nothing important was lost. Recreate it if you want those plugins pinned per project or want a `uv`/`npm`/`docker` allowlist. Otherwise close it. |
-| 10 | CLAUDE.md headings inverted; stale §13 auto-loaded | Open | |
-| 11 | SSE payload (`change_percent`, timestamp unit, `retry:`) not pinned | Open | |
-| 12 | SSE is change-driven; status dot / heartbeat | Open | |
-| 13 | §13 item 5 is half-decided by the design | Open | |
-| 14 | `agent-browser` vs Playwright | Open | |
-| 15 | README, LICENSE and CI workflows deleted | Open | |
-| 16 | `db/.gitkeep` missing / ignore rule | Open | The `db/` directory doesn't exist yet. |
-| 17 | `include_router` inside lifespan in the design | Open | |
-| 18 | `reasoning_effort="low"` not stated in §9 | Open | |
+SQLite `REAL` values and “round at write time” do not define a consistent accounting model. With fractional shares, quantity × price can produce fractions of a cent. Independently rounding cash, average cost, and trade values can make the recorded trade disagree with the cash movement. Rounding a positive quantity to four decimals can also turn it into zero.
 
-**Totals: 0 resolved, 1 partial, 17 open.**
+**Suggested resolution:** Change item 8. Define quantity increments, supported price precision, rounding mode, and one authoritative calculation of the settlement amount. Use decimal arithmetic and an exact persisted representation, such as scaled integers. Reject nonfinite values, nonpositive values, and unsupported quantity precision. Define average-cost and closing-position calculations using the same representation; avoid an unrelated floating-point epsilon.
 
----
+### 2. Atomic transactions alone do not prevent overspending or duplicate trades
 
-## New findings
+**Severity:** High  
+**Sections:** 7–9; Section 13 item 20
 
-### Critical
+Manual trades, chat actions, multiple browser tabs, and background snapshots can overlap despite the single-user model. Two requests can both validate against the same cash balance before either writes. A retry after a lost HTTP response can execute a trade twice.
 
-#### N1. The `.env` with live secrets is in local git history
-- Commit `3d54958` added the root `.env`: 6 lines, namely `OPENROUTER_API_KEY`, `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `CONFLUENCE_URL`, `CONFLUENCE_SPACE_KEY` and `MASSIVE_API_KEY`. `081c577` deletes it from the tree, but the blob is still in history.
-- `main` is **ahead of `origin/main` by 2 and not pushed yet**, so nothing has leaked to GitHub. The next `git push` will publish all three tokens.
-- **Fix before any push:** rewrite the two local commits so that neither contains `.env`. For example, run `git reset --soft origin/main`, confirm `.env` is not staged, then recommit. Afterwards, check that `git log origin/main..HEAD --all -- .env` prints nothing.
-- If this history was ever pushed or shared, rotate the OpenRouter, Atlassian and Massive keys.
+**Suggested resolution:** Agree with item 20’s configurable database path, WAL mode, and per-trade transaction, but require balance and position validation inside the serialized write transaction. Include cash, position, trade, and snapshot changes in that transaction. Add a client-generated request identifier with a uniqueness constraint for trade and chat execution; replay completed results without repeating actions. Do not hold database transactions open during LLM or market-data network calls.
 
-### High
+### 3. Price coverage and trade subscription rules are circular
 
-#### N2. The old project copy is now tracked at the root `finally/` and will pull agents off the fresh-start path
-- `3d54958` committed 39 files under the root `finally/`. They include a working `backend/app/market/*` with tests, a separate `CLAUDE.md`, `.claude/settings.json`, and a `cerebras` skill.
-- `MARKET_DATA_SUMMARY.md` gives the exact import path (`from app.market import PriceCache, …`) and calls the code "complete". An agent that greps the repo for `PriceCache` will find this copy and import or copy from it, which contradicts the from-scratch decision.
-- PLAN §13 A1 still offers "restore the market data code" as an option. That option conflicts with the decision.
-- **Fix:** add one line to `Projects/finally/CLAUDE.md`: "Build everything under `Projects/finally/` from scratch. Do not read, import or copy from the repo-root `finally/` folder or from git history." Reword §13 A1 to "rebuild per the summary". Optionally, untrack the root `finally/` folder.
+**Severity:** High  
+**Sections:** 6, 8, 9; Section 13 items 4, 6, 32
 
-#### N3. Only the chat response is specified; the rest of the REST contract is not
-- §13 item 11 pins `POST /api/chat`. Nothing pins the response bodies for `GET /api/portfolio`, `POST /api/portfolio/trade` (success **and** failure), `GET /api/portfolio/history`, `GET/POST/DELETE /api/watchlist`, or `/api/health`. Nothing pins the error envelope or status codes either: FastAPI's default is `{"detail": …}`, and 400 vs 422 for validation errors is undecided.
-- Frontend and backend agents will build in parallel against guessed shapes. That is the most likely integration failure.
-- **Fix:** add an "API contract" subsection to §8 with one JSON example per endpoint and a single error shape. For example, `{"error": "insufficient_cash", "message": "..."}` with 400 for business-rule failures and 422 left to FastAPI for schema errors. Alternatively, have the backend agent publish `planning/API.md` before frontend work starts.
+The poller tracks watched tickers, while portfolio valuation needs held tickers too. Trading an unwatched ticker is undefined. Item 6 proposes both rejecting trades without prices and automatically adding traded tickers, without specifying which happens first or whether a rejected trade changes the watchlist.
 
-#### N4. No agent roster, build order, or definition of done
-- §1 says "agents interact through files in `planning/`" and §4 mentions Frontend Engineer, Backend and Market Data agents. But `.claude/agents/` contains only `reviewer.md`, and nothing defines who owns what, in what order, or how hand-off is signalled.
-- **Fix:** add a short §14 "Build plan". It should list the agents (market data, backend API/DB, LLM, frontend, Docker/scripts, E2E), their owned directories, the order (market data, then backend + API contract, then frontend, then Docker, then E2E), and a done-check per stage (for example "`uv run pytest` green" or "`curl /api/health` returns 200 in the container"). Add the matching `.claude/agents/*.md`.
+**Suggested resolution:** Agree with items 4 and 32: track the watchlist union open positions, including on startup. Change item 6 to specify an exact sequence. A simple contract is that users or chat must add a ticker and obtain a usable quote before trading it; a rejected trade makes no watchlist changes. If automatic addition is retained, define its failure and rollback behavior explicitly.
 
-### Medium
+### 4. Massive polling promises exceed the specified API contract
 
-#### N5. The frontend dev loop is undefined
-- In production, the frontend is a static export on the same origin. During development, `next dev` serves on :3000 while FastAPI is on :8000, so relative `/api/*` fetches and `new EventSource('/api/stream/prices')` miss the backend. Next.js `rewrites` are not supported with `output: 'export'`.
-- **Fix:** pick one approach and document it. Either (a) a `NEXT_PUBLIC_API_BASE` env var (empty in production, `http://localhost:8000` in dev) plus a dev-only CORS allowlist for `http://localhost:3000` in FastAPI, or (b) frontend agents always test against a built export served by the backend.
+**Severity:** High  
+**Sections:** 5, 6; Section 13 items 5, 29
 
-#### N6. The database location is contradictory, and the relative path collides with `backend/db/`
-- §11 runs `-v finally-data:/app/db`, which is a **named** volume, then says "the `db/` directory in the project root maps to `/app/db`". Only a bind mount does that. With the named volume, the host `db/` (and `db/.gitkeep`) is never used.
-- When run locally (`cd backend && uv run uvicorn …`), the relative default `db/finally.db` resolves to `backend/db/finally.db`, which is inside the schema-code directory from §4.
-- **Fix:** state that Docker uses the named volume and that the host `db/` is only for local runs. Resolve `DB_PATH` (§13 item 20) to an absolute path anchored at the project root, not at the current working directory. Adopting §13 item 31 (`backend/app/db/`) removes the name clash.
+“REST works on all tiers” does not establish access to a suitable price endpoint. At ten tickers, polling each ticker every 15 seconds requires 40 calls per minute. A batch endpoint could reduce calls, but endpoint access still matters: Massive’s full-market snapshot supports ticker filtering, excludes the Basic plan, and provides delayed data on some paid plans. Poll frequency therefore does not establish real-time pricing. [Massive snapshot documentation](https://massive.com/docs/rest/stocks/snapshots/full-market-snapshot)
 
-#### N7. Dependencies are not pinned and there is no lockfile policy for LiteLLM
-- §11 says `uv sync` "from lockfile", but there is no `uv.lock` yet and no stated pin policy. LiteLLM moves fast and has had compromised PyPI releases reported (March 2026). It is also heavy for a slim image.
-- **Fix:** pin `litellm` to a vetted exact version, commit `uv.lock`, and use `uv sync --frozen --no-dev` in the Dockerfile. Do the same with `package-lock.json` and `npm ci` for the frontend stage.
+**Suggested resolution:** Change item 29. Either explicitly defer Massive implementation and remove its core acceptance requirements, or specify one supported endpoint and plan, batching, quote timestamps, rate limiting, backoff, and delayed-data labeling. Retain mocked adapter tests if it ships; live-provider E2E need not be required. Do not classify authorization failures, rate limits, or temporary empty responses as invalid symbols under item 5.
 
-#### N8. §13's 33 open items are now the bottleneck
-- Nothing in PLAN.md changed in the last day. Every agent session still loads all of §13 through `@planning/PLAN.md`, including the wrong A2. Some agents will treat each "Suggested" as decided, and others won't.
-- **Fix:** the owner accepts the suggestions as a batch, with explicit overrides only where they disagree, and folds them into §§5–12. Known conflicts to settle while doing so:
-  - item 17 omits `change_percent` (prior #11);
-  - item 29 ("defer Massive") contradicts the summary's "`massive` is a core dependency" (prior #6);
-  - item A1's "restore" option (N2).
+### 5. Stale and missing quotes have no execution or valuation policy
 
-### Low
+**Severity:** High  
+**Sections:** 6–9; Section 13 items 6, 16, 17
 
-- **N9. Docker details.** `python:3.12-slim` has no `curl`, so a `HEALTHCHECK` must use `python -c "import urllib.request…"` or install curl. `docker run --env-file .env` fails hard if `.env` is missing, so the start scripts should pass it only when the file exists. That fits §13 item 19.
-- **N10. LLM-initiated watchlist changes need the same validation as manual ones.** §9 says this for trades but not for `watchlist_changes`. Apply the §13 item 5 symbol rule. Also cap the watchlist size (for example 50): the simulator rebuilds a Cholesky matrix on every add, and an LLM loop could add many tickers.
-- **N11. Ignore rules for the project.** When restoring `Projects/finally/.gitignore` (prior #1), include `node_modules/`, `.next/`, `out/`, `backend/static/`, `.venv/`, `db/*` + `!db/.gitkeep`, `test-results/` and `playwright-report/`.
+A quote can remain cached after a provider failure, market closure, or poller crash. A connected SSE stream does not mean its quotes are current. Neither trade execution nor snapshots specify how to handle stale or missing prices, so an agent could fill at an arbitrarily old price or value an unpriced holding at zero.
 
----
+**Suggested resolution:** Define source timestamp, freshness status, and a source-appropriate maximum execution age. Reject execution without an acceptable quote. Preserve last-known prices for display with a visible stale state; mark valuation incomplete rather than silently substituting zero. Specify whether incomplete snapshots are skipped or explicitly flagged. Keep transport connectivity separate from quote freshness.
 
-## Suggested order of action
-1. **N1:** scrub `.env` from the two unpushed commits **before any `git push`**.
-2. **N2:** add the "don't use root `finally/`" guard to CLAUDE.md. Then prior #3, #5 and #7, which are one-line doc fixes.
-3. **N8:** settle §13 in one pass. Fold in prior #4, #6, #11 and #12, plus N3 (API contract) and N6 (DB path).
-4. **N4:** write the build plan and agent definitions, then start the backend agent.
+### 6. Chat execution can contradict its own conversational message
 
----
+**Severity:** High  
+**Sections:** 9; Section 13 items 11, 12
 
-## Third pass (2026-10-30)
+The LLM writes its message before validation and execution. It may say “Bought 10 TSLA” even when the backend rejects the action. Item 12 correctly identifies that no later LLM call exists, but displaying an error beside a success claim still leaves contradictory output.
 
-_Reviewer agent. Same scope as above. Secrets are referred to by key name only._
+Item 11 also leaves action ordering unresolved: trades and watchlist changes live in separate arrays, and the outcome can depend on execution order.
 
-### What changed since the second pass
+**Suggested resolution:** Agree with independent actions and avoiding a second LLM call, with amendments. Require the model to describe proposed actions without claiming completion. Render backend-generated execution results as authoritative confirmations. Define deterministic ordering, validate each action against state updated by earlier successful actions, and return requested quantity, actual fill price, action status, and error code. Persist those same results.
 
-- **Git history only. No content changed.** The two local commits (`3d54958`, `081c577`) were reset and recommitted as `8222874` (docs, root `.gitignore`, root `finally/` copy) and `c47e50a` (the second-pass REVIEW.md). Both are **pushed**: `main` == `origin/main`, and the working tree is clean.
-- `.env` is in **no reachable commit** on any local or remote branch (`git log --all -- .env` is empty). The root `.env` still exists on disk and is ignored. Its key names are unchanged.
-- `CLAUDE.md`, `PLAN.md`, `MARKET_DATA_SUMMARY.md`, `archive/` and `.claude/` are byte-identical to what the second pass reviewed. No file under `Projects/finally/` is newer than the second-pass REVIEW.md. There is still no `backend/`, `frontend/`, `db/`, `scripts/`, `test/` or `.gitignore` in the project.
-- `Projects/finally/Finally.code-workspace` was removed in `8222874`. That's harmless.
+### 7. Automatic execution lacks a clear authorization boundary
 
-### Status of all prior findings
+**Severity:** High  
+**Sections:** 9; Section 13 items 11, 15
 
-| # | Status | Note (only where something changed or matters) |
-|---|--------|------|
-| 1 | Partial | Unchanged. The root `.gitignore` covers `.env` but not `node_modules/`, `.next/`, `out/`, `*.db` or `static/`. |
-| 2 | Open | |
-| 3 | Open | PLAN.md lines 296 and 307 still say `cerebras-inference`. §13 A2 is still wrong. |
-| 4 | Open | |
-| 5 | Open | |
-| 6 | Open | |
-| 7 | Open | |
-| 8 | Open | |
-| 9 | Open (low) | |
-| 10 | Open | |
-| 11 | Open | |
-| 12 | Open | |
-| 13 | Open | |
-| 14 | Open | |
-| 15 | Open | |
-| 16 | Open | |
-| 17 | Open | |
-| 18 | Open | |
-| N1 | **Resolved** | History was rewritten before pushing, and the pushed history has no `.env`, so no key needs rotating. The only remaining copy is in the local reflog (see T2). |
-| N2 | Open, **worse** | The root `finally/` copy (39 files, including working `backend/app/market/*`) is now on `origin/main`. A second full copy also exists at `prelegal/finally/` (39 files, from before this work). CLAUDE.md still has no "do not import from these" guard. |
-| N3 | Open | |
-| N4 | Open | |
-| N5 | Open | |
-| N6 | Open | |
-| N7 | Open | |
-| N8 | Open | |
-| N9 | Open | |
-| N10 | Open | |
-| N11 | Open | |
+“Suggest trades,” “execute trades when the user asks or agrees,” and proactive watchlist management are not precise enough to distinguish analysis from permission to mutate state. A question such as “What if I bought 10 AAPL?” must not become a purchase merely because it contains a trade phrase.
 
-**Totals (29 items): 1 resolved (N1), 1 partial (#1), 27 open.**
+**Suggested resolution:** Preserve execution without confirmation for explicit trading requests, but define that hypothetical, quoted, analytical, and recommendation requests produce no trades. Define what a later “yes” authorizes. Validate all generated actions server-side, limit action counts, and enforce the same domain rules as manual requests. Change item 15’s mock to anchored command fixtures so it does not teach or test accidental execution of hypothetical requests.
 
-### New findings
+### 8. Restarting the simulator can change persisted portfolio wealth arbitrarily
 
-#### High
-- **T1. Two decoy implementations are now published, and the plan points agents at them.** This builds on N2. `MARKET_DATA_SUMMARY.md` says the code is "Complete, tested" at `backend/app/market/`. In Python files, `git grep PriceCache` now returns hits only in `finally/backend/...` and `prelegal/finally/backend/...`, both on `origin/main`. Any agent that runs a code search, or any fresh clone, will find them. **Fix:** add the guard line to CLAUDE.md now ("Build from scratch in `Projects/finally/`. Never import from, copy from or consult root `finally/` or `prelegal/finally/`."). Reword the summary's status as "design reference, to be rebuilt" (prior #5). Optionally delete or archive the root `finally/` copy in a normal commit.
+**Severity:** High  
+**Sections:** 6, 7, 11
 
-#### Low
-- **T2. The local reflog still references `3d54958`, which contains the `.env` blob.** It can't leak through a normal push, and it expires on its own (after 90 days by default). To remove it now, the owner can run `git reflog expire --expire=now --all && git gc --prune=now`. That's optional, and the owner's call.
-- **T3. Parts of the second-pass text are now stale.** The header ("two local commits… not pushed") and N1's "the next `git push` will publish" are out of date. This section supersedes them. Trim them when you next edit this file.
-- **T4. The stale remote branch `origin/fix/code-review-high-medium`** still has the old `Projects/finally/backend/` layout (24 backend files). It's already merged into `main`, so delete it on GitHub to keep anyone from checking out the old tree.
+Positions, cash, and portfolio history persist, but simulated prices exist only in memory and start from seed values. Restarting the container can therefore reset every held asset’s price while preserving its cost basis and historical valuations.
 
-### Suggested order of action (updated)
-1. **T1/N2:** add the CLAUDE.md guard. Fix prior #3, #5 and #7 (one-line doc fixes).
-2. **N8:** settle PLAN §13 in one batch, folding in N3 (API contract) and N6 (DB path).
-3. **N4:** write the build plan and agent definitions, then start the backend agent. Add `Projects/finally/.gitignore` (N11) in that agent's first commit.
+**Suggested resolution:** Persist the simulator’s latest prices and restore them on startup. For simplicity, resume from those prices without simulating elapsed downtime. Define the initial baseline for newly tracked symbols and make account reset a separate, explicit operation.
+
+## Medium-severity findings
+
+### 9. Endpoint descriptions are not sufficient integration contracts
+
+**Severity:** Medium  
+**Sections:** 8, 9; Section 13 items 11, 13
+
+Most endpoints specify their purpose but not their response shape. Agents must invent portfolio field names, error envelopes, status codes, timestamp formats, and duplicate-add or missing-delete behavior. The chat request body itself is unspecified.
+
+**Suggested resolution:** Add compact request and response examples for every endpoint and a common error structure. Define nullable prices, numeric serialization, UTC timestamps, collection ordering, and idempotent watchlist behavior. Adopt item 11’s execution-result concept with the amendments above. Change item 13’s blanket HTTP 200 recommendation: configuration and upstream failures should have explicit machine-readable states, using appropriate HTTP errors or a documented failure envelope rather than masquerading as successful assistant replies.
+
+### 10. Persisted conversation history cannot be restored through the API
+
+**Severity:** Medium  
+**Sections:** 7–10; Section 13 items 13, 14
+
+The UI promises conversation history and the database stores messages, but there is no read endpoint. Reloading the page may show an empty chat while the model remembers earlier messages. Ordering by timestamps alone also leaves ties ambiguous.
+
+**Suggested resolution:** Add a bounded chat-history endpoint with stable ordering and persisted action results. Agree with item 14’s last-20-message starting point, but also impose a context-size budget and define whether the pending message is included. Store the user message once before inference and retain a visible failure outcome if inference fails. Serialize chat turns or define their concurrent ordering.
+
+### 11. Synchronous LLM examples can block market streaming
+
+**Severity:** Medium  
+**Sections:** 3, 6, 9; `.claude/skills/cerebras/SKILL.md`
+
+The referenced skill uses synchronous `completion(...)`. Calling that directly inside an asynchronous FastAPI handler can block the event loop during inference, interrupting SSE and background work.
+
+The specification also leaves worker count unspecified even though the price cache and producer are process-local.
+
+**Suggested resolution:** Require an asynchronous LLM call or explicit thread offloading, with bounded timeouts. Run one Uvicorn worker for this architecture, and start and stop all background tasks through the application lifespan. State that multiple workers or replicas require a different shared-state design.
+
+### 12. The SSE contract does not define bootstrap, freshness, or reconnection behavior
+
+**Severity:** Medium  
+**Sections:** 6, 10, 12; Section 13 items 17, 27
+
+Item 17 supplies useful fields but uses an illustrative object rather than valid JSON. It does not say whether events contain all tracked symbols or only changed symbols. The main plan describes regular broadcasts, while the design reference describes version-based change detection.
+
+Repeated unchanged quotes could create fake chart points or repeated price flashes. Reconnecting clients could also wait without receiving their initial valuation.
+
+**Suggested resolution:** Agree with pinning the payload, but specify valid examples, timestamp units, direction values, `change` semantics, and full-snapshot versus delta behavior. Send a current snapshot immediately on connection, then publish changed quotes; use heartbeats separately. Define no replay requirement if reconnect always bootstraps current state. Specify when reconnecting becomes disconnected.
+
+### 13. Live valuation rules do not cover synchronization between clients
+
+**Severity:** Medium  
+**Sections:** 8, 10; Section 13 items 16, 24
+
+Client-side valuation from SSE is reasonable, but “refetch after every action” covers only actions originating in that browser. Another tab can change cash or holdings without notifying it. Removing prices from the watchlist response also requires a reliable SSE bootstrap.
+
+**Suggested resolution:** Agree with item 16’s client-side calculation and item 24’s lean watchlist response once the SSE bootstrap is defined. Add a simple portfolio refresh on window focus and a modest polling interval, or explicitly constrain the supported experience to one active tab. Define that cached holdings remain provisional until the portfolio refresh completes.
+
+### 14. P&L and visualization metrics have multiple plausible meanings
+
+**Severity:** Medium  
+**Sections:** 2, 7, 8, 10; Section 13 items 7, 9
+
+The “P&L chart” actually stores total account value. “% change” could mean session price movement or unrealized return. Treemap weight could include cash or only invested assets, and color could encode absolute profit or percentage return.
+
+**Suggested resolution:** Define formulas and labels explicitly:
+
+- Account value = cash + marked value of holdings.
+- Unrealized P&L = quantity × (current price − average cost).
+- Position return = unrealized P&L ÷ position cost basis.
+- Total account P&L = account value − initial funding, assuming no deposits or withdrawals.
+
+Agree with item 9’s zero-position deletion and unchanged average cost on partial sales. Omitting a separately stored realized-P&L field is reasonable. Agree with item 7’s session-change simplification, but choose one baseline—preferably first observed client price—and label it consistently. Specify treemap sizing, color metric, cash handling, and empty state.
+
+### 15. Portfolio and frontend history need bounded, deterministic behavior
+
+**Severity:** Medium  
+**Sections:** 6, 7, 10; Section 13 items 18, 21
+
+Accumulating every frontend tick indefinitely grows memory. “Last ~500 points, or downsample” leaves both implementation and chart time horizon undefined. At 30-second intervals, 500 consecutive points cover only about four hours.
+
+There is also no initial snapshot, so the fresh-start chart may remain empty until a timer fires.
+
+**Suggested resolution:** Agree with item 18’s session-only main chart and defer the backend chart-history endpoint. Specify a bounded frontend ring buffer and how same-timestamp updates are handled. Amend item 21 to an exact query contract, such as the latest 500 snapshots returned chronologically, with the UI labeling that window. Seed an initial snapshot. Unlimited database retention is acceptable for this local demo if explicitly documented.
+
+### 16. Symbol acceptance and simulator reproducibility are underspecified
+
+**Severity:** Medium  
+**Sections:** 6, 8, 12; Section 13 item 5
+
+Accepting arbitrary symbols is reasonable for a simulator, but silently assigning a new random seed price on each subscription can change an asset’s value after removal and re-addition. A one-to-five-letter rule is a product restriction rather than a general stock-symbol validator.
+
+The plan also does not define GBM time units, parameter units, or a repeatable random source.
+
+**Suggested resolution:** Change item 5 to explicitly describe synthetic symbol support. Normalize and validate using a documented restricted grammar; display unknown symbols as synthetic. Assign stable initial parameters per symbol and retain its last price within the chosen persistence policy. Define the simulator timestep and parameter units, plus a configurable random seed or deterministic test source. Do not infer symbol validity from temporary provider data absence.
+
+### 17. LLM failure and routing guarantees need tightening
+
+**Severity:** Medium  
+**Sections:** 5, 9; Section 13 items 13, 19; `.claude/skills/cerebras/SKILL.md`
+
+The plan says Cerebras is the inference provider, but the skill only prioritizes it with `provider.order`. OpenRouter allows fallback unless disabled, so this does not guarantee Cerebras-only execution. [OpenRouter provider routing](https://openrouter.ai/docs/guides/routing/provider-selection)
+
+Structured output also needs local semantic validation regardless of provider support.
+
+**Suggested resolution:** Decide whether Cerebras is preferred or required. If required, explicitly disable fallback and return a clear unavailable result when it cannot serve the request. Validate the complete response before executing any action. Agree with item 19: the application must start without an LLM key, and mock mode must bypass credentials. Keep item 13’s bounded timeout, but define handling for refusal, truncation, malformed output, and invalid actions. Do not automatically repeat execution after partial completion.
+
+### 18. Database startup and schema evolution remain ambiguous
+
+**Severity:** Medium  
+**Sections:** 4, 7; Section 13 items 10, 20, 30, 31
+
+The plan alternates between first-request and startup initialization. Creating missing tables is not enough to distinguish a fresh database from an existing database needing a schema change. Seeding whenever tables are empty could restore deliberately removed watchlist entries.
+
+**Suggested resolution:** Agree with item 30: initialize once in the lifespan handler. Seed defaults only for a newly created account, not an intentionally empty watchlist. Record a schema version and define a minimal incompatible-version policy. Agree with item 10’s clarification that `users_profile.id` is the user identifier and item 20’s configurable path. Item 31’s `backend/app/db/` location is reasonable; use an absolute resolved runtime database path to avoid dependence on the working directory.
+
+### 19. The volume and launch instructions describe different persistence mechanisms
+
+**Severity:** Medium  
+**Sections:** 2, 4, 5, 11; Section 13 items 19, 26, 33
+
+The example uses a named Docker volume, but the prose says the project’s `db/` directory maps into the container. Those are different arrangements. Startup also requires `--env-file .env` even though the simulator should run without credentials. A raw Docker command does not itself open the host browser.
+
+**Suggested resolution:** Choose the named volume as the default and correct the directory description. Make an environment file optional, keep secrets out of image build inputs, and specify container naming, detached execution, readiness waiting, and script behavior when already running. Agree with dropping optional Compose under item 26. Amend item 33: browser opening belongs to platform scripts after readiness, with an opt-out and documented Linux/Windows behavior.
+
+### 20. No-auth local use conflicts with unrestricted network and cloud deployment
+
+**Severity:** Medium  
+**Sections:** 2, 3, 11
+
+The app intentionally has no authentication, but the Docker example publishes port 8000 without restricting the host interface. Any reachable client can mutate the shared portfolio and trigger requests charged to the configured LLM account. “Designed to deploy” to arbitrary container platforms also overlooks persistent-storage and single-process assumptions.
+
+**Suggested resolution:** Bind the default host mapping to `127.0.0.1:8000:8000` and define the supported core deployment as a local, trusted workstation. Remove the general cloud-readiness claim or explicitly defer authentication, storage adaptation, and replica coordination to that stretch scope.
+
+### 21. The proposed testing simplification removes useful behavioral coverage
+
+**Severity:** Medium  
+**Sections:** 12; Section 13 items 15, 27, 28, 29
+
+Host-run Playwright is a sound simplification. However, a status-dot unit test does not demonstrate that prices resume after an interrupted stream. Mocking the LLM alone also does not make price-dependent tests deterministic, and persistent test volumes can leak state between scenarios.
+
+**Suggested resolution:** Agree with host-run Playwright and trimming generic rendering tests. Change item 27’s recommendation to remove reconnection coverage: retain one controlled disconnect/reconnect integration test that asserts resumed updates. Use isolated databases and deterministic price fixtures for accounting tests. Keep focused tests for concurrent buys, retry deduplication, stale prices, rounding boundaries, partial chat failures, and restart persistence. If Massive ships, retain mocked transport and failure tests.
+
+## Low-severity findings
+
+### 22. Charting simplification introduces unnecessary custom algorithms
+
+**Severity:** Low  
+**Sections:** 6, 10; Section 13 item 23
+
+Item 23 correctly identifies that Recharts is SVG-based, contradicting the canvas preference. However, writing a squarify algorithm adds custom layout code and edge cases solely to avoid a dependency. The correlated GBM design reference similarly introduces mathematical complexity that the demo may not need.
+
+**Suggested resolution:** Partially agree with item 23: select one main charting library and use simple SVG sparklines. Use a maintained treemap implementation or explicitly accept a simpler proportional layout rather than requiring custom squarification. For correlated prices, consider a shared market/sector shock plus ticker-specific noise instead of a dynamically managed correlation matrix. Treat the summary’s module count and historical test counts as nonbinding reference information.
+
+### 23. The build stage retains an obsolete runtime and weak lockfile instructions
+
+**Severity:** Low  
+**Sections:** 3, 11; Section 13 item 3
+
+Node 20 is still specified even though item 3 identifies its end of life. The official release schedule lists its EOL as April 30, 2026. `npm install` and unqualified `uv sync` also leave reproducibility weaker than the stated rationale. [Node.js release schedule](https://github.com/nodejs/Release#release-schedule)
+
+**Suggested resolution:** Agree with item 3 and choose one supported major, such as Node 24, rather than leaving alternatives open. Require committed dependency lockfiles, `npm ci`, and frozen Python dependency synchronization for image builds.
+
+### 24. Accessibility and practical completion criteria are missing
+
+**Severity:** Low  
+**Sections:** 2, 10, 12
+
+“Visually stunning,” “functional on tablet,” and “production-quality” are subjective. There are no measurable requirements for keyboard operation, chart alternatives, reduced motion, or distinguishing gains and losses without color.
+
+**Suggested resolution:** Add a short acceptance checklist covering keyboard-accessible ticker selection and trading, labeled inputs, visible focus, textual action errors, reduced-motion price flashes, non-color gain/loss indicators, chart summaries, and one defined tablet viewport. Include no-position, no-price, loading, and provider-error states.
+
+### 25. Section 13 is still a competing specification rather than a decision record
+
+**Severity:** Low  
+**Sections:** 3–13; Section 13 items 1, 2, 22, 25
+
+Agents must reconcile normative text with unaccepted suggestions that contradict it. For example, database initialization, watchlist response contents, charting, and testing infrastructure currently have competing descriptions.
+
+Items 1 and 2 are resolved consistently with the local documentation: this is a rebuild, and the `cerebras` skill exists. Other sound housekeeping suggestions remain unapplied.
+
+**Suggested resolution:** Fold accepted decisions into Sections 3–12 before implementation and move unresolved decisions into an explicitly nonnormative list. Agree with item 22’s API-before-static mounting order; additionally ensure unknown `/api/*` requests return API errors rather than frontend content. Agree with item 25’s composite keys for watchlists and positions. Keep resolved items 1 and 2 closed, and state that the plan takes precedence over historical design references.
+
+## Findings by severity
+
+| Severity | Count |
+|---|---:|
+| Critical | 0 |
+| High | 8 |
+| Medium | 13 |
+| Low | 4 |
+| **Total** | **25** |

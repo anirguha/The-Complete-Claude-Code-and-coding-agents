@@ -1,0 +1,19 @@
+{
+  "name": "ag-tools",
+  "owner": {
+    "name": "AG",
+    "email": "anirguha@hotmail.com"
+  },
+  "plugins": [
+    {
+      "name": "independent-reviewer",
+      "source": "./independent-reviewer",
+      "description": "Carry out an independent review of all changes since last commit",
+      "version": "1.0.0",
+      "authot": {
+        "name": "AG",
+        "email": "anirguha@hotmail.com"
+      }
+    }
+  ]
+}
