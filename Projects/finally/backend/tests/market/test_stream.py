@@ -59,5 +59,4 @@ async def test_empty_cache_sends_empty_object():
 def test_router_route_registered():
     app = FastAPI()
     app.include_router(create_stream_router(PriceCache()))
-    paths = {r.path for r in app.routes}
-    assert "/api/stream/prices" in paths
+    assert "/api/stream/prices" in app.openapi()["paths"]
