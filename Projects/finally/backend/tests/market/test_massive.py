@@ -6,7 +6,12 @@ import pytest
 from massive.exceptions import BadResponse
 from urllib3.exceptions import MaxRetryError
 
-from app.market import InvalidTickerError, MarketDataSource, MarketDataUnavailableError, PriceCache
+from app.market import (
+    InvalidTickerError,
+    MarketDataSource,
+    MarketDataUnavailableError,
+    PriceCache,
+)
 from app.market import massive_client as mc
 from app.market.massive_client import MassiveDataSource, parse_snapshot
 

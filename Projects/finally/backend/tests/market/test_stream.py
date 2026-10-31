@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from fastapi import FastAPI
@@ -60,3 +61,52 @@ def test_router_route_registered():
     app = FastAPI()
     app.include_router(create_stream_router(PriceCache()))
     assert "/api/stream/prices" in app.openapi()["paths"]
+
+
+async def test_endpoint_streams_prices_over_asgi():
+    # Driven through raw ASGI: the stream never ends, and httpx's ASGI transport
+    # would wait for the whole response body before returning.
+    cache = PriceCache()
+    cache.update("AAPL", 190.0, 1.0)
+    app = FastAPI()
+    app.include_router(create_stream_router(cache))
+    messages = []
+    got_event = asyncio.Event()
+
+    async def receive():
+        await asyncio.Event().wait()  # the client stays connected
+
+    async def send(message):
+        messages.append(message)
+        if message.get("body"):
+            got_event.set()
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/api/stream/prices",
+        "raw_path": b"/api/stream/prices",
+        "root_path": "",
+        "query_string": b"",
+        "headers": [],
+        "server": ("test", 80),
+        "client": ("test", 1234),
+    }
+    task = asyncio.create_task(app(scope, receive, send))
+    try:
+        await asyncio.wait_for(got_event.wait(), timeout=5)
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+    start, body = messages[0], messages[1]["body"].decode()
+    headers = dict(start["headers"])
+    assert start["status"] == 200
+    assert headers[b"content-type"].startswith(b"text/event-stream")
+    assert headers[b"cache-control"] == b"no-cache"
+    assert headers[b"x-accel-buffering"] == b"no"
+    assert body.startswith("data: ") and body.endswith("\n\n")
+    assert json.loads(body[len("data: "):])["AAPL"]["price"] == 190.0

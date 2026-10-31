@@ -84,6 +84,16 @@ def test_prices_stay_positive():
         assert sim.step()["TSLA"] > 0
 
 
+def test_full_default_watchlist_steps():
+    sim = GBMSimulator(event_probability=0.0, rng=random.Random(3))
+    for t in KNOWN_TICKERS:
+        sim.add_ticker(t)
+    for _ in range(100):
+        prices = sim.step()
+    assert set(prices) == set(KNOWN_TICKERS)
+    assert all(p > 0 and p != KNOWN_TICKERS[t].seed_price for t, p in prices.items())
+
+
 def test_sigma_matches_target():
     sim = GBMSimulator(event_probability=0.0, rng=random.Random(7))
     sim.add_ticker("AAPL")
