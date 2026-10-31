@@ -1,0 +1,23 @@
+# Secrets. .env.example is the committed template.
+.env
+.env.*
+!.env.example
+
+# Runtime database. Never add a bare `db/` line: it would also match backend/app/db/.
+/db/*
+!/db/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Python and Node leftovers
+__pycache__/
+.venv/
+.coverage
+.coverage.*
+.pytest_cache/
+.ruff_cache/
+node_modules/
+
+.DS_Store

@@ -1,0 +1,39 @@
+# Allow-list: only the two components enter the build context. Everything else
+# stays out, including .env, .env.*, planning/, test/, db/, .git and .claude.
+*
+!backend/
+!frontend/
+
+# Secrets and local state inside the components
+**/.env
+**/.env.*
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.db-journal
+**/*.sqlite*
+
+# Dependencies and build output: rebuilt inside the image
+**/.venv
+**/node_modules
+**/.next
+frontend/out
+frontend/coverage
+**/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Caches and tooling
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.coverage
+**/.coverage.*
+**/.claude
+**/.DS_Store
+**/*.log
+
+# Not needed at runtime
+backend/tests
+backend/market_data_demo.py
+backend/README.md
