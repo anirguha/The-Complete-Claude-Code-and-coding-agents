@@ -23,7 +23,12 @@ from dataclasses import dataclass, field
 from itertools import combinations
 
 from app.market import InvalidTickerError, PriceCache, PriceUpdate, normalize_ticker
-from app.market.seed_prices import CROSS_SECTOR_CORR, KNOWN_TICKERS, SECTOR_CORR, params_for
+from app.market.seed_prices import (
+    CROSS_SECTOR_CORR,
+    KNOWN_TICKERS,
+    SECTOR_CORR,
+    params_for,
+)
 from app.market.simulator import TICK_SECONDS, GBMSimulator, SimulatorDataSource
 
 DEMO_EVENT_PROBABILITY = 0.005  # 10x the app's rate, so a short demo shows some events
@@ -112,9 +117,15 @@ class Session:
         return new_moves
 
 
-def render(session: Session, source: SimulatorDataSource, args: argparse.Namespace) -> str:
+def render(
+    session: Session, source: SimulatorDataSource, args: argparse.Namespace
+) -> str:
     status = source.status()
-    remaining = "Ctrl+C to stop" if args.duration == 0 else f"{args.duration:g}s run, Ctrl+C to stop"
+    remaining = (
+        "Ctrl+C to stop"
+        if args.duration == 0
+        else f"{args.duration:g}s run, Ctrl+C to stop"
+    )
     lines = [
         paint("FinAlly market simulator", BOLD)
         + f"   source={status.source} mode={status.mode}"
@@ -142,7 +153,9 @@ def render(session: Session, source: SimulatorDataSource, args: argparse.Namespa
     return "".join(f"{line}\x1b[K\n" for line in lines)
 
 
-async def run(session: Session, source: SimulatorDataSource, args: argparse.Namespace) -> None:
+async def run(
+    session: Session, source: SimulatorDataSource, args: argparse.Namespace
+) -> None:
     deadline = time.monotonic() + args.duration if args.duration else math.inf
     await source.start(args.tickers)
     try:
@@ -162,7 +175,9 @@ async def run(session: Session, source: SimulatorDataSource, args: argparse.Name
 
 def print_summary(session: Session) -> None:
     print(paint(f"\nSession summary ({session.elapsed:.1f}s)", BOLD))
-    print(f"{'TICKER':<7} {'START':>10} {'END':>10} {'CHANGE':>8} {'LOW':>10} {'HIGH':>10} {'TICKS':>6}")
+    print(
+        f"{'TICKER':<7} {'START':>10} {'END':>10} {'CHANGE':>8} {'LOW':>10} {'HIGH':>10} {'TICKS':>6}"
+    )
     for ticker, t in sorted(session.tracks.items()):
         change = paint(f"{t.change_pct:>+7.2f}%", signed_color(t.change_pct))
         print(
@@ -190,19 +205,32 @@ def print_model_check(seed: int | None) -> None:
     }
     for a, b in combinations(KNOWN_TICKERS, 2):
         sector_a, sector_b = params_for(a).sector, params_for(b).sector
-        group = f"within {sector_a}" if sector_a and sector_a == sector_b else "across sectors"
+        group = (
+            f"within {sector_a}"
+            if sector_a and sector_a == sector_b
+            else "across sectors"
+        )
         groups[group][1].append(statistics.correlation(returns[a], returns[b]))
 
-    print(paint(f"\nModel check: return correlation over {MODEL_CHECK_TICKS:,} ticks", BOLD))
+    print(
+        paint(
+            f"\nModel check: return correlation over {MODEL_CHECK_TICKS:,} ticks", BOLD
+        )
+    )
     print(f"{'PAIRS':<16} {'TARGET':>7} {'MEASURED':>9}")
     for name, (target, values) in groups.items():
         print(f"{name:<16} {target:>7.2f} {statistics.fmean(values):>9.2f}")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Live demo of the market data simulator.")
+    parser = argparse.ArgumentParser(
+        description="Live demo of the market data simulator."
+    )
     parser.add_argument(
-        "--duration", type=float, default=30.0, help="seconds to run; 0 runs until Ctrl+C (default: 30)"
+        "--duration",
+        type=float,
+        default=30.0,
+        help="seconds to run; 0 runs until Ctrl+C (default: 30)",
     )
     parser.add_argument(
         "--tickers",
@@ -212,7 +240,10 @@ def parse_args() -> argparse.Namespace:
         help="symbols to simulate; unknown ones get a generated seed price (default: the app's 10)",
     )
     parser.add_argument(
-        "--speed", type=float, default=1.0, help="simulated time per real second (default: 1)"
+        "--speed",
+        type=float,
+        default=1.0,
+        help="simulated time per real second (default: 1)",
     )
     parser.add_argument(
         "--event-probability",
@@ -220,7 +251,9 @@ def parse_args() -> argparse.Namespace:
         default=DEMO_EVENT_PROBABILITY,
         help=f"chance of a 2-5%% jump per ticker per tick (default: {DEMO_EVENT_PROBABILITY})",
     )
-    parser.add_argument("--seed", type=int, help="random seed for a repeatable price path")
+    parser.add_argument(
+        "--seed", type=int, help="random seed for a repeatable price path"
+    )
     args = parser.parse_args()
 
     if args.duration < 0:
