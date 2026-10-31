@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+@theme {
+  --breakpoint-desk: 75rem;
+
+  --color-base: #0d1117;
+  --color-pane: #10161f;
+  --color-strip: #161d28;
+  --color-raised: #1b2431;
+  --color-edge: #2a3341;
+  --color-ink: #dfe5ec;
+  --color-dim: #94a0b0;
+  --color-faint: #808c9a;
+  --color-amber: #ecad0a;
+  --color-blue: #209dd7;
+  --color-purple: #753991;
+  --color-purple-hover: #8a48aa;
+  --color-up: #3cc985;
+  --color-down: #f4645f;
+
+  --font-sans: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* All figures line up in columns and hold still while prices tick. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-stretch: 88%;
+}
+
+.display-figure {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-stretch: 70%;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 1px;
+}
+
+/* Price flash: the class snaps the highlight on, removing it fades over 500ms. */
+.price-cell {
+  border-radius: 2px;
+  padding: 1px 3px;
+  transition:
+    background-color 500ms ease-out,
+    color 500ms ease-out;
+}
+
+.price-cell.flash-up {
+  background-color: rgb(60 201 133 / 0.38);
+  color: #eafff4;
+  transition: none;
+}
+
+.price-cell.flash-down {
+  background-color: rgb(244 100 95 / 0.38);
+  color: #fff0ef;
+  transition: none;
+}
+
+/* Scrollbars stay inside the muted palette. */
+.pane-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-edge) transparent;
+}
+
+.field {
+  background: var(--color-base);
+  border: 1px solid var(--color-edge);
+  border-radius: 2px;
+  color: var(--color-ink);
+  height: 30px;
+  padding: 0 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.field::placeholder {
+  color: var(--color-faint);
+}
+
+.field:focus {
+  border-color: var(--color-blue);
+  outline: none;
+}
+
+.btn-submit {
+  background: var(--color-purple);
+  border-radius: 2px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  height: 30px;
+  padding: 0 12px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--color-purple-hover);
+}
+
+.btn-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.thinking-dot {
+  animation: thinking 1.1s infinite ease-in-out;
+  background: var(--color-amber);
+  border-radius: 50%;
+  display: inline-block;
+  height: 5px;
+  width: 5px;
+}
+
+.thinking-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.thinking-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes thinking {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .price-cell {
+    transition: none;
+  }
+  .thinking-dot {
+    animation: none;
+  }
+}
