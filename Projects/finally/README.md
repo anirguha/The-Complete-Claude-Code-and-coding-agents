@@ -26,14 +26,31 @@ It is the capstone project for an agentic AI coding course, built entirely by co
 
 ## Run with Docker
 
-You need Docker running. On macOS or Linux:
+Run the commands below from `Projects/finally`, the directory containing this README. From a fresh clone:
+
+```bash
+git clone https://github.com/anirguha/The-Complete-Claude-Code-and-coding-agents.git
+cd "The-Complete-Claude-Code-and-coding-agents/Projects/finally"
+```
+
+Install and start Docker Desktop (or Docker Engine on Linux), then confirm `docker info` succeeds. Docker builds the frontend and backend for you; host Python and Node.js installations are not required. No API keys are needed to try the simulator and manual trading.
+
+On macOS or Linux:
 
 ```bash
 scripts/start_mac.sh   # build if needed, start, wait until healthy, open the browser
-scripts/stop_mac.sh    # stop and remove the container; your data is kept
 ```
 
-Then go to http://localhost:8000. To use another port, because 8000 is busy for example:
+The first start builds the image, creates `.env` if it is missing, and waits for the health check before opening the browser. Open http://localhost:8000 to use the app. New portfolios start with $10,000 in simulated cash.
+
+To check the backend and inspect container logs:
+
+```bash
+curl --fail http://localhost:8000/api/health
+docker logs --tail 50 finally
+```
+
+To use another port, because 8000 is busy for example:
 
 ```bash
 FINALLY_PORT=8030 scripts/start_mac.sh
@@ -41,9 +58,17 @@ FINALLY_PORT=8030 scripts/start_mac.sh
 
 `start_mac.sh` flags: `--build` rebuilds the image after a code change, and `--no-open` skips the browser. Running it again replaces the container.
 
-On Windows PowerShell, use `scripts\start_windows.ps1` (`-Build`, `-NoOpen`, `$env:FINALLY_PORT`) and `scripts\stop_windows.ps1`. **The Windows scripts have not been run yet.**
+On Windows PowerShell, from the same project directory:
+
+```powershell
+.\scripts\start_windows.ps1
+```
+
+Use `-Build` to rebuild, `-NoOpen` to skip opening a browser, or set `$env:FINALLY_PORT = "8030"` before starting to change the port. **The Windows scripts have not been run yet.**
 
 The app is published on `127.0.0.1` only, because it has no login and its chat can place trades.
+
+When finished, run `scripts/stop_mac.sh` (PowerShell: `.\scripts\stop_windows.ps1`) to stop and remove the container while keeping your data.
 
 Your portfolio lives in the `finally-data` Docker volume. To start over at $10,000, stop the app and run `docker volume rm finally-data`.
 
@@ -61,18 +86,45 @@ Docker reads `.env` literally, so do not quote values or put comments after them
 
 ## Local development
 
-Backend, from `backend/`, on a database outside any synced folder:
+Install Python 3.12 or newer, `uv`, and Node.js 22 or newer with npm. The following commands use a macOS/Linux shell and start from the project directory.
+
+In terminal 1, install the backend dependencies and start the API:
 
 ```bash
-LLM_MOCK=true DB_PATH=/tmp/finally.db uv run uvicorn app.main:app --port 8010
+cd backend
+uv sync --frozen
+LLM_MOCK=true MASSIVE_API_KEY= DB_PATH=/tmp/finally.db uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload --timeout-graceful-shutdown 3
 ```
 
-Without a frontend export the backend serves the API only, and `/` returns 404. It logs a warning saying so. Either build the frontend and set `STATIC_DIR` to `frontend/out`, or run the frontend dev server, from `frontend/`:
+This uses mock chat, simulated prices, and a SQLite database outside the checkout. Keep the database outside synced folders such as Google Drive. The shutdown timeout lets the backend stop even when a browser has an open price stream.
+
+In terminal 2, starting from the project directory, install and run the frontend:
 
 ```bash
-npm install
-BACKEND_URL=http://localhost:8010 npm run dev
+cd frontend
+npm ci
+BACKEND_URL=http://127.0.0.1:8010 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
+
+Open http://localhost:3000. The frontend proxies `/api/*` to the backend on port 8010. Check the API directly at http://127.0.0.1:8010/api/health or view its interactive docs at http://127.0.0.1:8010/docs. Stop both servers with Ctrl+C; `/tmp/finally.db` persists until removed or cleared by the operating system.
+
+For real services during local development, copy `.env.example` to `backend/.env`, add your keys there, and remove `LLM_MOCK=true MASSIVE_API_KEY=` from the backend command. Direct backend runs load `backend/.env`; the Docker start scripts instead pass the project-level `.env` into the container. Exported environment variables take precedence over `backend/.env`.
+
+To serve a production frontend export through FastAPI without Docker, stop the development servers, run `npm run build` in `frontend/`, then run this from `backend/`:
+
+```bash
+LLM_MOCK=true MASSIVE_API_KEY= DB_PATH=/tmp/finally.db STATIC_DIR=../frontend/out uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --timeout-graceful-shutdown 3
+```
+
+Open http://localhost:8010 for the complete app.
+
+## Troubleshooting
+
+- **Docker is unavailable:** start Docker Desktop or the Docker daemon and retry `docker info`.
+- **Port already in use:** set `FINALLY_PORT` for Docker, or choose another backend/frontend port locally and update `BACKEND_URL` to match.
+- **Backend `/` returns 404:** without a frontend export this is expected. Use the frontend dev server on port 3000, or build the frontend and set `STATIC_DIR` as shown above.
+- **Chat is not configured:** add `OPENROUTER_API_KEY` to the appropriate environment file, or use `LLM_MOCK=true` for mock replies. Restart after changing configuration.
+- **Docker start fails its health check:** inspect `docker logs --tail 50 finally`. After code changes, restart with `scripts/start_mac.sh --build` (PowerShell: `.\scripts\start_windows.ps1 -Build`).
 
 ## Tests
 
