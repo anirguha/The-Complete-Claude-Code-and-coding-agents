@@ -124,6 +124,7 @@ Open http://localhost:8010 for the complete app.
 - **Port already in use:** set `FINALLY_PORT` for Docker, or choose another backend/frontend port locally and update `BACKEND_URL` to match.
 - **Backend `/` returns 404:** without a frontend export this is expected. Use the frontend dev server on port 3000, or build the frontend and set `STATIC_DIR` as shown above.
 - **Chat is not configured:** add `OPENROUTER_API_KEY` to the appropriate environment file, or use `LLM_MOCK=true` for mock replies. Restart after changing configuration.
+- **OpenRouter rejected the API key:** use a key created in your OpenRouter account; keys from other providers cannot authenticate with OpenRouter. For Docker, update the project `.env` and rerun the start script so the container receives the new key. `docker restart` alone retains the old environment. For local development, update `backend/.env` and restart the backend.
 - **Docker start fails its health check:** inspect `docker logs --tail 50 finally`. After code changes, restart with `scripts/start_mac.sh --build` (PowerShell: `.\scripts\start_windows.ps1 -Build`).
 
 ## Tests

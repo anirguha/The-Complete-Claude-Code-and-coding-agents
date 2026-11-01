@@ -29,6 +29,11 @@ FAILURE_MESSAGE = (
     "Sorry, I could not get a response just now, so no trades or watchlist changes "
     "were made. Please try again."
 )
+AUTHENTICATION_MESSAGE = (
+    "Sorry, OpenRouter rejected the API key. Set OPENROUTER_API_KEY to a valid "
+    "OpenRouter key in .env for Docker, or backend/.env for local development, "
+    "then restart the app. No trades or watchlist changes were made."
+)
 # UnavailableError's own text can carry a raw upstream error.
 MARKET_UNAVAILABLE_MESSAGE = "Market data is unavailable right now"
 UNEXPECTED_ERROR_MESSAGE = "Something went wrong, so this action was not completed"
@@ -113,6 +118,8 @@ class ChatService:
         except Exception as exc:
             # Only the type and redacted text: tracebacks could carry the request.
             logger.error("LLM request failed: %s: %s", type(exc).__name__, _redacted(exc, api_key))
+            if getattr(exc, "status_code", None) == 401:
+                return ParsedReply(AUTHENTICATION_MESSAGE)
             return ParsedReply(FAILURE_MESSAGE)
 
     def _load_context(self) -> tuple[dict[str, Any], list[dict[str, Any]]]:

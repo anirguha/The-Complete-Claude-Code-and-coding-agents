@@ -11,6 +11,7 @@ import logging
 import httpx
 import pytest
 
+from app.llm.service import AUTHENTICATION_MESSAGE, FAILURE_MESSAGE
 from tests.llm.conftest import TEST_KEY
 
 
@@ -104,6 +105,8 @@ async def test_an_http_error_fails_once_without_retrying_or_leaking(live_chat, t
 
     assert response["trades"] == []
     assert response["message"].startswith("Sorry")
+    assert response["message"] == (AUTHENTICATION_MESSAGE if status == 401 else FAILURE_MESSAGE)
+    assert response["watchlist_changes"] == []
     assert len(transport.requests) == 1
     assert TEST_KEY not in json.dumps(response)
     assert TEST_KEY not in "\n".join(
